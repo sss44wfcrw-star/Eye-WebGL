@@ -69,6 +69,16 @@
         </div>
     </div>
 
+    <script>
+        window.PARAKLETOS_CONFIG = {
+            BACKEND_URL:
+                window.location.hostname === "localhost" ||
+                window.location.hostname === "127.0.0.1"
+                    ? "http://localhost:8000"
+                    : "https://api.your-production-domain.com"
+        };
+    </script>
+
     <script src="main.js" type="module"></script>
 </body>
 </html>
