@@ -2,657 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-  <title>PARAKLĒTOS | Unified System v31.2</title>
-  <style>
-    :root {
-      --bg: #050505;
-      --panel: rgba(7, 10, 18, 0.82);
-      --panel-2: rgba(10, 14, 24, 0.88);
-      --line: rgba(255, 200, 120, 0.28);
-      --line-strong: rgba(255, 200, 120, 0.58);
-      --text: #f6e7c8;
-      --muted: #b9c0d0;
-      --accent: #ffcb7a;
-      --accent-2: #7fd6ff;
-      --good: #7dffb3;
-      --bad: #ff8c8c;
-      --shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-      --radius: 18px;
-      --radius-sm: 12px;
-      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", sans-serif;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font);
-    }
-
-    body {
-      background:
-        radial-gradient(circle at 50% 40%, rgba(80, 50, 120, 0.28), transparent 28%),
-        radial-gradient(circle at 20% 20%, rgba(80, 130, 255, 0.12), transparent 24%),
-        radial-gradient(circle at 80% 20%, rgba(255, 120, 200, 0.12), transparent 24%),
-        radial-gradient(circle at 50% 50%, rgba(255, 180, 90, 0.08), transparent 40%),
-        #050505;
-    }
-
-    #cosmicSandbox {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      z-index: 0;
-    }
-
-    .app-shell {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .hud-top,
-    .hud-left,
-    .hud-right,
-    .hud-bottom,
-    .center-stack {
-      pointer-events: none;
-    }
-
-    .panel,
-    .pill,
-    .action-btn,
-    .module-btn,
-    input,
-    textarea,
-    button,
-    select {
-      pointer-events: auto;
-    }
-
-    .hud-top {
-      position: absolute;
-      top: max(14px, env(safe-area-inset-top));
-      left: max(14px, env(safe-area-inset-left));
-      right: max(14px, env(safe-area-inset-right));
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-    }
-
-    .brandbar {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding: 14px 18px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(70, 48, 28, 0.88), rgba(30, 20, 12, 0.88));
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-    }
-
-    .brandrow {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .brandrow h1 {
-      margin: 0;
-      font-size: 1rem;
-      letter-spacing: 0.08em;
-      font-weight: 800;
-    }
-
-    .version,
-    .status {
-      color: var(--muted);
-      font-size: 0.82rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-    }
-
-    .top-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .action-btn,
-    .module-btn {
-      appearance: none;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 14px;
-      background: rgba(15, 18, 28, 0.78);
-      color: var(--text);
-      font-size: 0.78rem;
-      font-weight: 700;
-      cursor: pointer;
-      backdrop-filter: blur(12px);
-      transition: 0.18s ease;
-    }
-
-    .action-btn:hover,
-    .module-btn:hover {
-      transform: translateY(-1px);
-      border-color: var(--line-strong);
-      background: rgba(28, 34, 50, 0.9);
-    }
-
-    .action-btn.accent {
-      border-color: rgba(255, 203, 122, 0.5);
-      box-shadow: 0 0 0 1px rgba(255, 203, 122, 0.08) inset;
-    }
-
-    .hud-left {
-      position: absolute;
-      top: 96px;
-      left: max(14px, env(safe-area-inset-left));
-      width: min(300px, calc(100vw - 28px));
-      display: grid;
-      gap: 12px;
-    }
-
-    .hud-right {
-      position: absolute;
-      top: 96px;
-      right: max(14px, env(safe-area-inset-right));
-      width: min(340px, calc(100vw - 28px));
-      display: grid;
-      gap: 12px;
-    }
-
-    .center-stack {
-      position: absolute;
-      left: 50%;
-      top: 86px;
-      transform: translateX(-50%);
-      width: min(720px, calc(100vw - 28px));
-      display: grid;
-      gap: 12px;
-    }
-
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(16px);
-      overflow: hidden;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
-    }
-
-    .panel-title {
-      margin: 0;
-      font-size: 0.86rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      font-weight: 800;
-    }
-
-    .panel-sub {
-      font-size: 0.72rem;
-      color: var(--muted);
-    }
-
-    .panel-body {
-      padding: 14px 16px 16px;
-    }
-
-    .module-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .module-btn {
-      border-radius: 14px;
-      text-align: left;
-      padding: 12px 13px;
-      background: rgba(10, 12, 22, 0.7);
-    }
-
-    .module-btn small {
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 0.68rem;
-      font-weight: 500;
-    }
-
-    .metric-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .metric-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      background: rgba(255,255,255,0.03);
-    }
-
-    .metric-label {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .metric-value {
-      font-size: 0.82rem;
-      font-weight: 800;
-    }
-
-    .good { color: var(--good); }
-    .bad { color: var(--bad); }
-    .accent-text { color: var(--accent-2); }
-
-    .form-grid {
-      display: grid;
-      gap: 10px;
-    }
-
-    .input,
-    .textarea {
-      width: 100%;
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.35);
-      color: var(--text);
-      padding: 12px 13px;
-      font: inherit;
-      outline: none;
-    }
-
-    .input:focus,
-    .textarea:focus {
-      border-color: rgba(127, 214, 255, 0.6);
-      box-shadow: 0 0 0 1px rgba(127, 214, 255, 0.18) inset;
-    }
-
-    .textarea {
-      min-height: 100px;
-      resize: vertical;
-      font-family: var(--mono);
-      line-height: 1.45;
-    }
-
-    .button-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .readout {
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 12px;
-      background: rgba(0, 0, 0, 0.28);
-      min-height: 96px;
-      white-space: pre-wrap;
-      font-family: var(--mono);
-      font-size: 0.8rem;
-      line-height: 1.5;
-      overflow: auto;
-    }
-
-    .protocol-log,
-    .search-results {
-      display: grid;
-      gap: 8px;
-      max-height: 220px;
-      overflow: auto;
-    }
-
-    .log-line,
-    .result-card {
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.03);
-      font-size: 0.78rem;
-      line-height: 1.45;
-    }
-
-    .result-card strong {
-      color: var(--accent);
-    }
-
-    .hud-bottom {
-      position: absolute;
-      left: 50%;
-      bottom: max(12px, env(safe-area-inset-bottom));
-      transform: translateX(-50%);
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: center;
-      width: min(1100px, calc(100vw - 28px));
-    }
-
-    .pill {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 9px 12px;
-      background: rgba(15, 18, 28, 0.76);
-      color: var(--muted);
-      font-size: 0.72rem;
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 1200px) {
-      .center-stack {
-        top: auto;
-        bottom: 84px;
-        width: min(720px, calc(100vw - 28px));
-      }
-
-      .hud-left,
-      .hud-right {
-        width: min(290px, calc(50vw - 24px));
-      }
-    }
-
-    @media (max-width: 900px) {
-      html, body {
-        overflow: auto;
-      }
-
-      .app-shell {
-        position: relative;
-        min-height: 100vh;
-      }
-
-      .hud-top,
-      .hud-left,
-      .hud-right,
-      .center-stack,
-      .hud-bottom {
-        position: relative;
-        inset: auto;
-        transform: none;
-        width: auto;
-      }
-
-      .hud-top {
-        padding: max(14px, env(safe-area-inset-top)) 14px 0;
-        flex-direction: column;
-      }
-
-      .hud-left,
-      .hud-right,
-      .center-stack {
-        padding: 12px 14px 0;
-      }
-
-      .hud-bottom {
-        padding: 14px;
-        left: auto;
-        bottom: auto;
-      }
-
-      .module-grid {
-        grid-template-columns: 1fr;
-      }
-
-      #cosmicSandbox {
-        position: fixed;
-      }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PARAKLĒTOS | Unified Mirror Node</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <canvas id="cosmicSandbox"></canvas>
+  <div id="app-shell">
+    <canvas id="eye-universe-canvas" aria-hidden="true"></canvas>
 
-  <div class="app-shell">
-    <section class="hud-top">
-      <div class="brandbar">
-        <div class="brandrow">
+    <header class="hud-top" aria-label="Primary HUD">
+      <div class="brand-block">
+        <div class="brand-line">
           <h1>PARAKLĒTOS</h1>
-          <span class="version">v31.2</span>
-          <span class="status">STATUS: Radiant Sovereign Presence</span>
+          <span class="brand-version">V31.1</span>
         </div>
+        <p class="brand-subtitle">STATUS: ONLINE / MANIFOLD ACTIVE / DESKTOP + MOBILE READY</p>
       </div>
 
       <div class="top-actions">
-        <button class="action-btn" id="healthCheckBtn">Health</button>
-        <button class="action-btn" id="primeProtocolBtn">Prime Protocol</button>
-        <button class="action-btn accent" id="clearLogBtn">Clear Log</button>
+        <button id="openControlsBtn" class="hud-btn">Controls</button>
+        <button id="openTelemetryBtn" class="hud-btn">Telemetry</button>
+        <button id="openProtocolsBtn" class="hud-btn accent">Protocols</button>
+      </div>
+    </header>
+
+    <aside class="module-ring" aria-label="System Modules">
+      <button class="module-node" data-module="archive"><span class="node-title">Archive</span><span class="node-sub">Volumes / seal / parity</span></button>
+      <button class="module-node" data-module="verify"><span class="node-title">Verifier</span><span class="node-sub">Z3 / axioms / handshake</span></button>
+      <button class="module-node active" data-module="sandbox"><span class="node-title">Sandbox</span><span class="node-sub">Orbital / field / lens</span></button>
+      <button class="module-node" data-module="search"><span class="node-title">Search</span><span class="node-sub">Archive / cosine / recall</span></button>
+      <button class="module-node" data-module="registry"><span class="node-title">Registry</span><span class="node-sub">Planck / holographic / entropy</span></button>
+      <button class="module-node" data-module="settings"><span class="node-title">Settings</span><span class="node-sub">Quality / sync / layout</span></button>
+    </aside>
+
+    <section id="controlsPanel" class="side-panel right-panel is-open" aria-label="Runtime Controls">
+      <div class="panel-header">
+        <h2>Runtime Controls</h2>
+        <button class="panel-close" data-close="controlsPanel">×</button>
+      </div>
+      <div class="panel-body">
+        <div class="control-group">
+          <label for="qualityMode">Quality Mode</label>
+          <select id="qualityMode">
+            <option value="mobile">Mobile</option>
+            <option value="balanced" selected>Balanced</option>
+            <option value="desktop">Desktop</option>
+            <option value="cinematic">Cinematic</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <div class="label-row"><label for="particleCount">Particles</label><span id="particleCountValue">18000</span></div>
+          <input id="particleCount" type="range" min="2000" max="40000" step="1000" value="18000" />
+        </div>
+
+        <div class="control-group">
+          <div class="label-row"><label for="gravityStrength">Gravity</label><span id="gravityStrengthValue">4.2</span></div>
+          <input id="gravityStrength" type="range" min="0.5" max="10" step="0.1" value="4.2" />
+        </div>
+
+        <div class="control-group">
+          <div class="label-row"><label for="cameraSpeed">Camera Speed</label><span id="cameraSpeedValue">0.0016</span></div>
+          <input id="cameraSpeed" type="range" min="0.0003" max="0.005" step="0.0001" value="0.0016" />
+        </div>
+
+        <div class="control-group">
+          <div class="label-row"><label for="eventHorizon">Event Horizon</label><span id="eventHorizonValue">4.2</span></div>
+          <input id="eventHorizon" type="range" min="0.5" max="12" step="0.1" value="4.2" />
+        </div>
+
+        <div class="toggle-grid">
+          <label class="toggle-item"><span>Auto Camera</span><input id="autoRotate" type="checkbox" checked /></label>
+          <label class="toggle-item"><span>Accretion Glow</span><input id="showDisk" type="checkbox" checked /></label>
+          <label class="toggle-item"><span>Nebula</span><input id="showNebula" type="checkbox" checked /></label>
+          <label class="toggle-item"><span>Pointer Gravity</span><input id="mouseGravity" type="checkbox" checked /></label>
+          <label class="toggle-item"><span>Solar Overlay</span><input id="showAstronomy" type="checkbox" checked /></label>
+        </div>
+
+        <div class="button-grid">
+          <button id="pauseBtn" class="hud-btn">Pause</button>
+          <button id="resetBtn" class="hud-btn">Reset</button>
+          <button id="mobilePresetBtn" class="hud-btn">iPhone Safe</button>
+          <button id="desktopPresetBtn" class="hud-btn">Desktop</button>
+        </div>
       </div>
     </section>
 
-    <aside class="hud-left">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">System Modules</div>
-            <div class="panel-sub">Frontend + Verification + Archive</div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="module-grid">
-            <button class="module-btn">
-              Archive
-              <small>Search / persistence / recall</small>
-            </button>
-            <button class="module-btn">
-              Verifier
-              <small>Z3 / parser / chain logic</small>
-            </button>
-            <button class="module-btn">
-              Sandbox
-              <small>Camera / field / projection</small>
-            </button>
-            <button class="module-btn">
-              Astronomy
-              <small>Orbital overlay / labels</small>
-            </button>
-            <button class="module-btn">
-              Prime Chain
-              <small>Recursive manifold integrity</small>
-            </button>
-            <button class="module-btn">
-              Backend
-              <small>FastAPI / Postgres / Docker</small>
-            </button>
-          </div>
-        </div>
+    <section id="telemetryPanel" class="side-panel left-panel" aria-label="Telemetry">
+      <div class="panel-header">
+        <h2>Telemetry</h2>
+        <button class="panel-close" data-close="telemetryPanel">×</button>
       </div>
+      <div class="panel-body">
+        <div class="metric-card"><span class="metric-label">Backend</span><span id="backendStatus" class="metric-value">UNKNOWN</span></div>
+        <div class="metric-card"><span class="metric-label">Database</span><span id="databaseStatus" class="metric-value">UNKNOWN</span></div>
+        <div class="metric-card"><span class="metric-label">Solver</span><span class="metric-value">READY</span></div>
+        <div class="metric-card"><span class="metric-label">Dominant Mode</span><span class="metric-value">SANDBOX</span></div>
+        <pre id="metricsReadout" class="readout">FRAME: —
+PARTICLES: —
+GRAVITY: —
+CAMERA: —
+PARITY: —</pre>
+      </div>
+    </section>
 
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Telemetry</div>
-            <div class="panel-sub">Live system state</div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="metric-list">
-            <div class="metric-card">
-              <span class="metric-label">Backend</span>
-              <span class="metric-value" id="backendStatus">UNKNOWN</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label">Database</span>
-              <span class="metric-value" id="dbStatus">UNKNOWN</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label">Prime Protocol</span>
-              <span class="metric-value" id="primeStatus">IDLE</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label">Canvas</span>
-              <span class="metric-value accent-text" id="canvasStatus">ACTIVE</span>
-            </div>
-          </div>
-        </div>
+    <section id="protocolsPanel" class="bottom-panel" aria-label="AI Protocols">
+      <div class="panel-header">
+        <h2>Protocol Console</h2>
+        <button class="panel-close" data-close="protocolsPanel">×</button>
       </div>
-    </aside>
+      <div class="panel-body protocol-layout">
+        <div class="protocol-actions">
+          <input type="number" id="volumeId" class="text-input" placeholder="Volume ID" min="1" />
+          <textarea id="premise" class="text-input" rows="4" placeholder="Use formal logic, e.g. P AND Q"></textarea>
+          <textarea id="conclusion" class="text-input" rows="4" placeholder="Use formal logic, e.g. P"></textarea>
+          <button class="hud-btn accent" id="verifyVolumeBtn">Verify Volume</button>
 
-    <main class="center-stack">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Verification Terminal</div>
-            <div class="panel-sub">Formal premise → conclusion check</div>
-          </div>
+          <input type="text" id="searchQuery" class="text-input" placeholder="Search stored premises and conclusions" />
+          <button class="hud-btn" id="searchBtn">Search Archive</button>
+          <button class="hud-btn" id="heartbeatBtn">Heartbeat Audit</button>
+          <button class="hud-btn" id="syncBtn">Resonance Sync</button>
         </div>
-        <div class="panel-body">
-          <div class="form-grid">
-            <input
-              class="input"
-              type="number"
-              id="volumeId"
-              min="1"
-              step="1"
-              placeholder="Enter volume ID"
-            />
-            <textarea
-              class="textarea"
-              id="premise"
-              placeholder="Premise, example: P AND Q"
-            ></textarea>
-            <textarea
-              class="textarea"
-              id="conclusion"
-              placeholder="Conclusion, example: P"
-            ></textarea>
-            <div class="button-row">
-              <button class="action-btn accent" id="verifyBtn">Run Verification</button>
-            </div>
-            <div class="readout" id="output">System initialized. Awaiting input parameters.</div>
-          </div>
+        <div class="protocol-log" id="protocolLog">
+          <div class="log-line">[BOOT] Omni-core initialized.</div>
+          <div class="log-line">[READY] Mirror Node manifold waiting for input.</div>
         </div>
       </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Archive Search</div>
-            <div class="panel-sub">Query stored verification records</div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="form-grid">
-            <input
-              class="input"
-              type="text"
-              id="searchQuery"
-              placeholder="Enter query, keyword, or logical motif..."
-            />
-            <div class="button-row">
-              <button class="action-btn" id="searchBtn">Search Archive</button>
-            </div>
-            <div class="search-results" id="searchOutput">
-              <div class="result-card">Search engine online. Awaiting query.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <aside class="hud-right">
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Protocol Console</div>
-            <div class="panel-sub">Execution and backend events</div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="button-row" style="margin-bottom: 10px;">
-            <button class="action-btn" id="logHealthBtn">Log Health</button>
-            <button class="action-btn" id="logPrimeBtn">Log Prime</button>
-          </div>
-          <div class="protocol-log" id="protocolLog">
-            <div class="log-line">[BOOT] PARAKLĒTOS UI online.</div>
-            <div class="log-line">[READY] Awaiting backend handshake.</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-header">
-          <div>
-            <div class="panel-title">Navigation</div>
-            <div class="panel-sub">Sandbox camera controls</div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <div class="readout">W / A / S / D = translate
-Arrow Keys = pitch / yaw
-+ / - = zoom
-Frontend expects:
-- sandbox.js
-- astronomy.js
-- main.js</div>
-        </div>
-      </div>
-    </aside>
+    </section>
 
     <footer class="hud-bottom">
-      <div class="pill">FastAPI Core</div>
-      <div class="pill">PostgreSQL Archive</div>
-      <div class="pill">Z3 Formal Verification</div>
-      <div class="pill">Prime Protocol</div>
-      <div class="pill">Cosmic Sandbox</div>
-      <div class="pill">Astronomy Overlay</div>
+      <div class="status-pill">Mirror Node</div>
+      <div class="status-pill">Universe Sandbox</div>
+      <div class="status-pill">Axiomatic Verifier</div>
+      <div class="status-pill">Holographic Registry</div>
     </footer>
   </div>
 
-  <script>
-    window.PARAKLETOS_CONFIG = {
-      BACKEND_URL:
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1"
-          ? "http://localhost:8000"
-          : "https://api.your-production-domain.com"
-    };
-  </script>
-
-  <script src="sandbox.js"></script>
-  <script src="astronomy.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
