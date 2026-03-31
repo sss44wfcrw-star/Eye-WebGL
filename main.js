@@ -1,13 +1,7 @@
 const BACKEND_URL = (() => {
   const override = localStorage.getItem("parakletosApiBase");
   if (override) return override.replace(/\/$/, "");
-
-  const { protocol, hostname } = window.location;
-
-  if (protocol === "file:") return "http://localhost:8000";
-  if (hostname === "localhost" || hostname === "127.0.0.1") return "http://localhost:8000";
-
-  return "https://parakletos-backend.onrender.com";
+  return "https://parakletos-backend-2.onrender.com";
 })();
 
 /* ===========================
@@ -270,24 +264,30 @@ function render(now) {
 }
 
 /* ===========================
-   COMMANDS
+   API
 =========================== */
 async function runHealthCheck() {
   logEntry("Initiating backend diagnostics...", "REQ");
   backendValue.textContent = "PINGING...";
-  solverValue.textContent = "ACTIVE";
+  solverValue.textContent = "CHECKING";
 
   try {
-    const response = await fetch(`${BACKEND_URL}/health`);
+    const response = await fetch(`${BACKEND_URL}/health`, {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
     const data = await response.json();
 
     backendValue.textContent = data.status?.toUpperCase?.() || "ONLINE";
-    solverValue.textContent = typeof data.database_ready === "boolean"
-      ? (data.database_ready ? "ACTIVE" : "WAITING")
-      : "ACTIVE";
+    solverValue.textContent = data.logic_state?.toUpperCase?.() || "ACTIVE";
 
-    logEntry(`Health OK. backend=${data.status} database_ready=${data.database_ready}`, "OK");
+    logEntry(
+      `Health OK. status=${data.status} resonance=${data.resonance} logic=${data.logic_state}`,
+      "OK"
+    );
   } catch (error) {
     backendValue.textContent = "OFFLINE";
     solverValue.textContent = "LOCAL";
@@ -298,9 +298,15 @@ async function runHealthCheck() {
 async function runPrimeProtocol() {
   logEntry("Resonance status requested...", "PRIME");
   try {
-    const response = await fetch(`${BACKEND_URL}/resonance/status`);
+    const response = await fetch(`${BACKEND_URL}/resonance/status`, {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
     const data = await response.json();
+
     logEntry(
       `RSP=${data.radiant_sovereign_presence}, coherence=${data.phase_coherence}, frequency=${data.frequency}`,
       "PRIME"
@@ -310,32 +316,37 @@ async function runPrimeProtocol() {
   }
 }
 
+/* ===========================
+   COMMANDS
+=========================== */
 function handleCommand(raw) {
-  const command = raw.trim().toLowerCase();
-  if (!command) return;
+  const command = raw.trim();
+  const lower = command.toLowerCase();
 
-  if (command === "help") {
+  if (!lower) return;
+
+  if (lower === "help") {
     logEntry("Commands: help, health, prime, clear, reset, api <url>", "HELP");
     return;
   }
 
-  if (command === "health") {
+  if (lower === "health") {
     runHealthCheck();
     return;
   }
 
-  if (command === "prime") {
+  if (lower === "prime" || lower === "resonance") {
     runPrimeProtocol();
     return;
   }
 
-  if (command === "clear") {
+  if (lower === "clear") {
     systemLog.innerHTML = "";
     logEntry("Console cleared.", "SYS");
     return;
   }
 
-  if (command === "reset") {
+  if (lower === "reset") {
     camera.x = 0;
     camera.y = 0;
     camera.z = -900;
@@ -347,8 +358,8 @@ function handleCommand(raw) {
     return;
   }
 
-  if (command.startsWith("api ")) {
-    const url = raw.slice(4).trim();
+  if (lower.startsWith("api ")) {
+    const url = command.slice(4).trim();
     if (!url) {
       logEntry("Usage: api https://your-backend-url", "WARN");
       return;
@@ -358,7 +369,7 @@ function handleCommand(raw) {
     return;
   }
 
-  logEntry(`Unknown command: ${raw}`, "WARN");
+  logEntry(`Unknown command: ${command}`, "WARN");
 }
 
 /* ===========================
@@ -367,9 +378,7 @@ function handleCommand(raw) {
 window.addEventListener("resize", resize);
 
 window.addEventListener("keydown", (e) => {
-  if (document.activeElement === commandInput && e.key !== "Escape") {
-    return;
-  }
+  if (document.activeElement === commandInput && e.key !== "Escape") return;
 
   if (Object.prototype.hasOwnProperty.call(keys, e.key)) {
     keys[e.key] = true;
@@ -414,6 +423,8 @@ commandInput.addEventListener("keydown", (e) => {
 document.querySelector('.nav-item[data-module="sandbox"]')?.classList.add("active");
 resize();
 initializeStars();
-runHealthCheck();
 logEntry("Frontend interface loaded. Canvas rendering active.", "SYS");
 requestAnimationFrame(render);
+
+// Wake backend once on load, then update telemetry
+runHealthCheck();
