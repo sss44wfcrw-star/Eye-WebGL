@@ -291,6 +291,67 @@
       flex-direction:column;
       gap:18px;
       min-height:760px;
+      <div class="panel autonomy" id="controlPanel">
+  <h3>Universe Controls</h3>
+
+  <div class="status-card">
+    <div class="left">Camera Zoom</div>
+    <div class="right"><span id="zoomValue">1.00</span>x</div>
+  </div>
+  <input id="zoomSlider" type="range" min="0.55" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
+
+  <div class="status-card">
+    <div class="left">Rotation Speed</div>
+    <div class="right"><span id="rotationSpeedValue">1.00</span></div>
+  </div>
+  <input id="rotationSpeedSlider" type="range" min="0" max="3" step="0.01" value="1.00" class="ctl-slider" />
+
+  <div class="status-card">
+    <div class="left">Star Density</div>
+    <div class="right"><span id="starCountValue">1400</span></div>
+  </div>
+  <input id="starCountSlider" type="range" min="200" max="4000" step="50" value="1400" class="ctl-slider" />
+
+  <div class="status-card">
+    <div class="left">Particle Density</div>
+    <div class="right"><span id="particleCountValue">260</span></div>
+  </div>
+  <input id="particleCountSlider" type="range" min="50" max="1200" step="10" value="260" class="ctl-slider" />
+
+  <div class="status-card">
+    <div class="left">Glow Strength</div>
+    <div class="right"><span id="glowValue">1.00</span></div>
+  </div>
+  <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
+
+  <div class="status-card">
+    <div class="left">Orbit Stretch</div>
+    <div class="right"><span id="orbitStretchValue">0.36</span></div>
+  </div>
+  <input id="orbitStretchSlider" type="range" min="0.15" max="0.75" step="0.01" value="0.36" class="ctl-slider" />
+
+  <div class="status-card">
+    <div class="left">Label Visibility</div>
+    <div class="right"><span id="labelsValue">ON</span></div>
+  </div>
+  <div class="ctl-button-row">
+    <button id="toggleLabelsBtn" class="ctl-btn">Toggle Labels</button>
+    <button id="toggleAutoRotateBtn" class="ctl-btn">Auto Rotate</button>
+  </div>
+
+  <div class="status-card">
+    <div class="left">Quick Actions</div>
+    <div class="right">LIVE</div>
+  </div>
+  <div class="ctl-button-grid">
+    <button id="centerViewBtn" class="ctl-btn">Center View</button>
+    <button id="zoomInBtn" class="ctl-btn">Zoom In</button>
+    <button id="zoomOutBtn" class="ctl-btn">Zoom Out</button>
+    <button id="boostStarsBtn" class="ctl-btn">Boost Stars</button>
+    <button id="boostParticlesBtn" class="ctl-btn">Boost Particles</button>
+    <button id="resetUniverseBtn" class="ctl-btn">Reset Universe</button>
+  </div>
+</div>
     }
 
     .autonomy{
