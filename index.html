@@ -51,18 +51,34 @@
 
             <section class="console-region">
                 <div class="telemetry-readout">
-                    <div class="tel-point"><span>BACKEND:</span> <span class="val">READY</span></div>
-                    <div class="tel-point"><span>SOLVER:</span> <span class="val">ACTIVE</span></div>
-                    <div class="tel-point"><span>FPS:</span> <span id="fps-counter">--</span></div>
+                    <div class="tel-point">
+                        <span>BACKEND:</span>
+                        <span class="val">READY</span>
+                    </div>
+                    <div class="tel-point">
+                        <span>SOLVER:</span>
+                        <span class="val">ACTIVE</span>
+                    </div>
+                    <div class="tel-point">
+                        <span>FPS:</span>
+                        <span id="fps-counter">--</span>
+                    </div>
                 </div>
+
                 <div class="protocol-console">
                     <div class="console-log" id="system-log">
                         <div class="entry">[BOOT] Omni-core initialized.</div>
                         <div class="entry">[READY] Mirror Node manifold waiting for input.</div>
                     </div>
+
                     <div class="input-line">
                         <span class="prompt">></span>
-                        <input type="text" placeholder="Awaiting protocol command..." autocomplete="off" spellcheck="false">
+                        <input
+                            type="text"
+                            placeholder="Awaiting protocol command..."
+                            autocomplete="off"
+                            spellcheck="false"
+                        >
                     </div>
                 </div>
             </section>
@@ -79,6 +95,6 @@
         };
     </script>
 
-    <script src="main.js" type="module"></script>
+    <script src="main.js"></script>
 </body>
 </html>
