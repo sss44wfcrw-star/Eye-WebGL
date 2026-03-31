@@ -1,6 +1,7 @@
 const BACKEND_URL = (() => {
   const override = localStorage.getItem("parakletosApiBase");
   if (override) return override.replace(/\/$/, "");
+
   return "https://parakletos-backend-2.onrender.com";
 })();
 
@@ -274,7 +275,7 @@ async function runHealthCheck() {
   try {
     const response = await fetch(`${BACKEND_URL}/health`, {
       method: "GET",
-      headers: { "Accept": "application/json" }
+      headers: { Accept: "application/json" }
     });
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -300,7 +301,7 @@ async function runPrimeProtocol() {
   try {
     const response = await fetch(`${BACKEND_URL}/resonance/status`, {
       method: "GET",
-      headers: { "Accept": "application/json" }
+      headers: { Accept: "application/json" }
     });
 
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -326,7 +327,7 @@ function handleCommand(raw) {
   if (!lower) return;
 
   if (lower === "help") {
-    logEntry("Commands: help, health, prime, clear, reset, api <url>", "HELP");
+    logEntry("Commands: help, health, prime, resonance, clear, reset, api <url>", "HELP");
     return;
   }
 
@@ -366,6 +367,7 @@ function handleCommand(raw) {
     }
     localStorage.setItem("parakletosApiBase", url);
     logEntry(`Saved API override: ${url}`, "SYS");
+    logEntry("Reload the page to use the new API URL.", "SYS");
     return;
   }
 
@@ -378,7 +380,9 @@ function handleCommand(raw) {
 window.addEventListener("resize", resize);
 
 window.addEventListener("keydown", (e) => {
-  if (document.activeElement === commandInput && e.key !== "Escape") return;
+  if (document.activeElement === commandInput && e.key !== "Escape") {
+    return;
+  }
 
   if (Object.prototype.hasOwnProperty.call(keys, e.key)) {
     keys[e.key] = true;
@@ -425,6 +429,4 @@ resize();
 initializeStars();
 logEntry("Frontend interface loaded. Canvas rendering active.", "SYS");
 requestAnimationFrame(render);
-
-// Wake backend once on load, then update telemetry
 runHealthCheck();
