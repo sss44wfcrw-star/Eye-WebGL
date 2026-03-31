@@ -1,329 +1,809 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>PARAKLETOS — INTENSE MODE</title>
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    background: #000;
-  }
-  canvas { display: block; }
-  #hud {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    z-index: 10;
-    background: rgba(0,0,0,0.45);
-    color: white;
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 12px;
-    backdrop-filter: blur(8px);
-  }
-  button {
-    margin-top: 6px;
-    width: 100%;
-    border: 0;
-    border-radius: 8px;
-    padding: 8px 10px;
-    background: #ff6a00;
-    color: white;
-    font-weight: 700;
-  }
-</style>
-</head>
-<body>
-<div id="hud">
-  PARAKLETOS — INTENSE MODE
-  <button id="burstBtn">Burst</button>
-</div>
-
-<script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
-
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x000000, isMobile ? 0.018 : 0.024);
-
-const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 3000);
-camera.position.set(0, 10, 65);
-
-const renderer = new THREE.WebGLRenderer({
-  antialias: true,
-  powerPreference: "high-performance"
-});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.2 : 1.8));
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.22));
-
-const hotLight = new THREE.PointLight(0xff6a00, 3.5, 400, 2);
-scene.add(hotLight);
-
-const coolLight = new THREE.PointLight(0x66aaff, 1.3, 500, 2);
-scene.add(coolLight);
-
-// Core
-const core = new THREE.Mesh(
-  new THREE.SphereGeometry(3.2, 64, 64),
-  new THREE.MeshBasicMaterial({ color: 0x000000 })
-);
-scene.add(core);
-
-const coreGlow = new THREE.Mesh(
-  new THREE.SphereGeometry(4.6, 64, 64),
-  new THREE.MeshBasicMaterial({
-    color: 0xff5a00,
-    transparent: true,
-    opacity: 0.08
-  })
-);
-scene.add(coreGlow);
-
-// Disk
-const disk = new THREE.Mesh(
-  new THREE.TorusGeometry(9, 1.7, 36, 260),
-  new THREE.MeshBasicMaterial({
-    color: 0xff5a00,
-    transparent: true,
-    opacity: 0.72
-  })
-);
-disk.rotation.x = Math.PI / 2;
-scene.add(disk);
-
-// Nebula shell
-const nebula = new THREE.Mesh(
-  new THREE.SphereGeometry(180, 32, 32),
-  new THREE.MeshBasicMaterial({
-    color: 0x2b003f,
-    transparent: true,
-    opacity: 0.05,
-    side: THREE.BackSide
-  })
-);
-scene.add(nebula);
-
-// Starfield
-let starField;
-function buildStars(count) {
-  if (starField) {
-    scene.remove(starField);
-    starField.geometry.dispose();
-    starField.material.dispose();
-  }
-  const g = new THREE.BufferGeometry();
-  const arr = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    const i3 = i * 3;
-    arr[i3] = (Math.random() - 0.5) * 1400;
-    arr[i3 + 1] = (Math.random() - 0.5) * 1400;
-    arr[i3 + 2] = (Math.random() - 0.5) * 1400;
-  }
-  g.setAttribute("position", new THREE.BufferAttribute(arr, 3));
-  const m = new THREE.PointsMaterial({
-    size: isMobile ? 0.8 : 0.65,
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.95
-  });
-  starField = new THREE.Points(g, m);
-  scene.add(starField);
-}
-buildStars(isMobile ? 1400 : 2600);
-
-// Particles
-const N = isMobile ? 16000 : 28000;
-const particleGeometry = new THREE.BufferGeometry();
-const positions = new Float32Array(N * 3);
-const velocities = new Float32Array(N * 3);
-const colors = new Float32Array(N * 3);
-const sizes = new Float32Array(N);
-
-for (let i = 0; i < N; i++) {
-  const i3 = i * 3;
-  const radius = Math.random() * 58;
-  const angle = Math.random() * Math.PI * 2;
-  const y = (Math.random() - 0.5) * 10;
-
-  positions[i3] = Math.cos(angle) * radius;
-  positions[i3 + 1] = y;
-  positions[i3 + 2] = Math.sin(angle) * radius;
-
-  velocities[i3] = (Math.random() - 0.5) * 0.018;
-  velocities[i3 + 1] = (Math.random() - 0.5) * 0.018;
-  velocities[i3 + 2] = (Math.random() - 0.5) * 0.018;
-
-  const t = Math.min(radius / 58, 1);
-
-  // hotter inner colors, cooler outer colors
-  colors[i3] = 1.0;
-  colors[i3 + 1] = 0.12 + 0.45 * (1 - t);
-  colors[i3 + 2] = 0.02 + 0.9 * t;
-
-  sizes[i] = radius < 10 ? 0.16 : radius < 25 ? 0.11 : 0.08;
-}
-
-particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-
-const particleMaterial = new THREE.PointsMaterial({
-  size: 0.11,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.95,
-  depthWrite: false,
-  blending: THREE.AdditiveBlending
-});
-
-const particles = new THREE.Points(particleGeometry, particleMaterial);
-scene.add(particles);
-
-// Larger soft glow shell using duplicated points
-const glowMaterial = new THREE.PointsMaterial({
-  size: 0.22,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.06,
-  depthWrite: false,
-  blending: THREE.AdditiveBlending
-});
-const glowParticles = new THREE.Points(particleGeometry, glowMaterial);
-scene.add(glowParticles);
-
-const state = {
-  mouseX: 0,
-  mouseY: 0,
-  t: 0,
-  burst: 0
-};
-
-function pointerToGravity(clientX, clientY) {
-  state.mouseX = (clientX / innerWidth - 0.5) * 120;
-  state.mouseY = -(clientY / innerHeight - 0.5) * 120;
-}
-
-window.addEventListener("mousemove", (e) => pointerToGravity(e.clientX, e.clientY), { passive: true });
-window.addEventListener("touchmove", (e) => {
-  const touch = e.touches[0];
-  if (touch) pointerToGravity(touch.clientX, touch.clientY);
-}, { passive: true });
-
-document.getElementById("burstBtn").addEventListener("click", () => {
-  state.burst = 1.0;
-});
-
-// Tuned for “intense” but still runnable
-const gravity = isMobile ? 4.6 : 5.8;
-const mass = isMobile ? 220 : 320;
-const swirl = isMobile ? 1.25 : 1.55;
-const drag = 0.992;
-const eventHorizon = isMobile ? 4.2 : 5.2;
-
-function updateParticles() {
-  const pos = particleGeometry.attributes.position.array;
-  const stride = isMobile ? 4 : 2;
-
-  for (let i = 0; i < N; i += stride) {
-    const i3 = i * 3;
-
-    const x = pos[i3];
-    const y = pos[i3 + 1];
-    const z = pos[i3 + 2];
-
-    const dx = -x + state.mouseX * 0.16;
-    const dy = -y + state.mouseY * 0.16;
-    const dz = -z;
-
-    const r = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.001;
-    const force = gravity * mass / (r * r);
-
-    const burstBoost = 1 + state.burst * 1.8;
-
-    velocities[i3] += (dx / r) * force * 0.0048 * burstBoost;
-    velocities[i3 + 1] += (dy / r) * force * 0.0048 * burstBoost;
-    velocities[i3 + 2] += (dz / r) * force * 0.0048 * burstBoost;
-
-    const temp = velocities[i3];
-    velocities[i3] = -velocities[i3 + 2] * swirl;
-    velocities[i3 + 2] = temp * swirl;
-
-    velocities[i3] *= drag;
-    velocities[i3 + 1] *= drag;
-    velocities[i3 + 2] *= drag;
-
-    if (r < eventHorizon) {
-      velocities[i3] *= 0.2;
-      velocities[i3 + 1] *= 0.2;
-      velocities[i3 + 2] *= 0.2;
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  />
+  <title>PARAKLĒTOS V.3.2.0 — Eye Universe Sandbox</title>
+  <style>
+    :root {
+      --hud-text-color: rgba(255, 255, 255, 0.82);
+      --hud-subtle-color: rgba(255, 255, 255, 0.45);
+      --hud-interaction-color: rgba(255, 140, 64, 0.95);
+      --hud-panel-bg: rgba(5, 5, 8, 0.58);
+      --hud-border: rgba(255, 255, 255, 0.10);
+      --space-vacuum-bg: #030303;
+      --font-stack: "Courier New", Courier, monospace;
     }
 
-    pos[i3] += velocities[i3];
-    pos[i3 + 1] += velocities[i3 + 1];
-    pos[i3 + 2] += velocities[i3 + 2];
-  }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--space-vacuum-bg);
+      font-family: var(--font-stack);
+      -webkit-font-smoothing: antialiased;
+      touch-action: none;
+    }
 
-  particleGeometry.attributes.position.needsUpdate = true;
-}
+    #sandbox-viewport {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%);
+    }
 
-function moveCamera() {
-  state.t += isMobile ? 0.0018 : 0.0022;
-  const radius = isMobile ? 74 : 92;
+    #eye-universe-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      display: block;
+    }
 
-  camera.position.x = Math.sin(state.t) * radius;
-  camera.position.z = Math.cos(state.t) * radius;
-  camera.position.y = Math.sin(state.t * 0.7) * (isMobile ? 18 : 28);
+    .sandbox-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 10;
+      pointer-events: none;
+    }
 
-  camera.lookAt(0, 0, 0);
-}
+    .title-container {
+      pointer-events: auto;
+      user-select: none;
+      max-width: 70vw;
+    }
 
-function animate() {
-  requestAnimationFrame(animate);
+    .title-container h1 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--hud-text-color);
+      letter-spacing: 0.35rem;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
 
-  updateParticles();
-  moveCamera();
+    .title-container h1 span {
+      font-weight: 400;
+      font-size: 0.8rem;
+      letter-spacing: 0.2rem;
+    }
 
-  disk.rotation.z += 0.012;
-  nebula.rotation.y += 0.0007;
+    .subtitle {
+      margin-top: 8px;
+      font-size: 0.64rem;
+      color: var(--hud-subtle-color);
+      letter-spacing: 0.18rem;
+    }
 
-  const pulse = 1 + Math.sin(Date.now() * 0.003) * 0.14 + state.burst * 0.18;
-  core.scale.setScalar(pulse);
-  coreGlow.scale.setScalar(pulse * 1.05);
+    .menu-toggle {
+      pointer-events: auto;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-  hotLight.position.set(
-    Math.sin(state.t * 1.6) * 14,
-    8 + Math.sin(state.t * 2.1) * 5,
-    Math.cos(state.t * 1.6) * 14
-  );
+    .hamburger,
+    .hamburger::before,
+    .hamburger::after {
+      display: block;
+      width: 28px;
+      height: 2px;
+      background-color: var(--hud-interaction-color);
+      position: relative;
+      transition: all 0.3s ease-in-out;
+      content: "";
+    }
 
-  coolLight.position.set(
-    Math.cos(state.t * 1.1) * 20,
-    -6,
-    Math.sin(state.t * 1.1) * 20
-  );
+    .hamburger::before { top: -8px; position: absolute; left: 0; }
+    .hamburger::after  { top:  8px; position: absolute; left: 0; }
 
-  state.burst *= 0.96;
+    .control-panel {
+      position: absolute;
+      top: 78px;
+      right: 20px;
+      width: min(320px, calc(100vw - 32px));
+      max-height: calc(100vh - 98px);
+      overflow: auto;
+      z-index: 12;
+      background: var(--hud-panel-bg);
+      border: 1px solid var(--hud-border);
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-sizing: border-box;
+      padding: 14px;
+      color: var(--hud-text-color);
+      display: none;
+    }
 
-  renderer.render(scene, camera);
-}
+    .control-panel.open {
+      display: block;
+    }
 
-window.addEventListener("resize", () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.2 : 1.8));
-  renderer.setSize(innerWidth, innerHeight);
-});
+    .control-panel h2 {
+      margin: 0 0 12px 0;
+      font-size: 0.85rem;
+      letter-spacing: 0.15rem;
+      text-transform: uppercase;
+      color: var(--hud-text-color);
+    }
 
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.2 : 1.8));
-renderer.setSize(innerWidth, innerHeight);
-animate();
-</script>
+    .control {
+      margin-bottom: 12px;
+    }
+
+    .control .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .control label {
+      font-size: 0.7rem;
+      color: var(--hud-subtle-color);
+      letter-spacing: 0.08rem;
+    }
+
+    .value {
+      font-size: 0.72rem;
+      color: var(--hud-interaction-color);
+    }
+
+    .control input[type="range"],
+    .control select {
+      width: 100%;
+    }
+
+    .control input[type="checkbox"] {
+      transform: scale(1.1);
+      accent-color: #ff8844;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .button-row button {
+      border: 1px solid var(--hud-border);
+      border-radius: 10px;
+      padding: 10px;
+      background: rgba(255,255,255,0.06);
+      color: var(--hud-text-color);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.72rem;
+      letter-spacing: 0.06rem;
+    }
+
+    .metrics {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--hud-border);
+      font-size: 0.68rem;
+      color: var(--hud-subtle-color);
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    @media (max-width: 640px) {
+      .sandbox-header {
+        padding: 14px;
+      }
+
+      .title-container h1 {
+        font-size: 0.82rem;
+        letter-spacing: 0.18rem;
+      }
+
+      .subtitle {
+        font-size: 0.58rem;
+        letter-spacing: 0.1rem;
+      }
+
+      .control-panel {
+        top: 66px;
+        right: 8px;
+        width: calc(100vw - 16px);
+        max-height: 64vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="sandbox-viewport">
+    <header class="sandbox-header" aria-label="Primary HUD">
+      <div class="title-container">
+        <h1>PARAKLĒTOS <span>V.3.2.0</span></h1>
+        <div class="subtitle">STATUS: ONLINE / MANIFOLD ACTIVE</div>
+      </div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Access Control Parameters">
+        <span class="hamburger"></span>
+      </button>
+    </header>
+
+    <aside class="control-panel" id="controlPanel" aria-label="Control Parameters">
+      <h2>Control Parameters</h2>
+
+      <div class="control">
+        <div class="row">
+          <label for="quality">Quality</label>
+          <span class="value" id="qualityValue">Balanced</span>
+        </div>
+        <select id="quality">
+          <option value="mobile">Mobile</option>
+          <option value="balanced" selected>Balanced</option>
+          <option value="desktop">Desktop</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="particleCount">Particles</label>
+          <span class="value" id="particleCountValue">18000</span>
+        </div>
+        <input id="particleCount" type="range" min="2000" max="40000" step="1000" value="18000">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="starCount">Stars</label>
+          <span class="value" id="starCountValue">1600</span>
+        </div>
+        <input id="starCount" type="range" min="200" max="6000" step="100" value="1600">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="gravity">Gravity</label>
+          <span class="value" id="gravityValue">4.20</span>
+        </div>
+        <input id="gravity" type="range" min="0.5" max="10" step="0.1" value="4.2">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="mass">Core Mass</label>
+          <span class="value" id="massValue">220</span>
+        </div>
+        <input id="mass" type="range" min="20" max="600" step="5" value="220">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="swirl">Swirl</label>
+          <span class="value" id="swirlValue">1.05</span>
+        </div>
+        <input id="swirl" type="range" min="0" max="3" step="0.05" value="1.05">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="drag">Drag</label>
+          <span class="value" id="dragValue">0.992</span>
+        </div>
+        <input id="drag" type="range" min="0.94" max="1.0" step="0.001" value="0.992">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="cameraSpeed">Camera</label>
+          <span class="value" id="cameraSpeedValue">0.0016</span>
+        </div>
+        <input id="cameraSpeed" type="range" min="0.0003" max="0.005" step="0.0001" value="0.0016">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="eventHorizon">Event Horizon</label>
+          <span class="value" id="eventHorizonValue">4.2</span>
+        </div>
+        <input id="eventHorizon" type="range" min="0.5" max="12" step="0.1" value="4.2">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="fogDensity">Fog</label>
+          <span class="value" id="fogDensityValue">0.014</span>
+        </div>
+        <input id="fogDensity" type="range" min="0.001" max="0.05" step="0.001" value="0.014">
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="showDisk">Accretion Disk</label>
+          <input id="showDisk" type="checkbox" checked>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="showNebula">Nebula Shell</label>
+          <input id="showNebula" type="checkbox" checked>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="mouseGravity">Pointer Gravity</label>
+          <input id="mouseGravity" type="checkbox" checked>
+        </div>
+      </div>
+
+      <div class="control">
+        <div class="row">
+          <label for="autoRotate">Auto Camera</label>
+          <input id="autoRotate" type="checkbox" checked>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button id="pauseBtn">Pause</button>
+        <button id="resetBtn">Reset</button>
+        <button id="mobilePresetBtn">iPhone Safe</button>
+        <button id="desktopPresetBtn">Desktop</button>
+      </div>
+
+      <div class="metrics" id="metrics"></div>
+    </aside>
+
+    <canvas id="eye-universe-canvas" aria-label="3D Rendering Context"></canvas>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
+
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    const canvas = document.getElementById("eye-universe-canvas");
+    const menuToggle = document.getElementById("menuToggle");
+    const controlPanel = document.getElementById("controlPanel");
+    const metrics = document.getElementById("metrics");
+
+    const ui = {
+      quality: document.getElementById("quality"),
+      qualityValue: document.getElementById("qualityValue"),
+      particleCount: document.getElementById("particleCount"),
+      particleCountValue: document.getElementById("particleCountValue"),
+      starCount: document.getElementById("starCount"),
+      starCountValue: document.getElementById("starCountValue"),
+      gravity: document.getElementById("gravity"),
+      gravityValue: document.getElementById("gravityValue"),
+      mass: document.getElementById("mass"),
+      massValue: document.getElementById("massValue"),
+      swirl: document.getElementById("swirl"),
+      swirlValue: document.getElementById("swirlValue"),
+      drag: document.getElementById("drag"),
+      dragValue: document.getElementById("dragValue"),
+      cameraSpeed: document.getElementById("cameraSpeed"),
+      cameraSpeedValue: document.getElementById("cameraSpeedValue"),
+      eventHorizon: document.getElementById("eventHorizon"),
+      eventHorizonValue: document.getElementById("eventHorizonValue"),
+      fogDensity: document.getElementById("fogDensity"),
+      fogDensityValue: document.getElementById("fogDensityValue"),
+      showDisk: document.getElementById("showDisk"),
+      showNebula: document.getElementById("showNebula"),
+      mouseGravity: document.getElementById("mouseGravity"),
+      autoRotate: document.getElementById("autoRotate"),
+      pauseBtn: document.getElementById("pauseBtn"),
+      resetBtn: document.getElementById("resetBtn"),
+      mobilePresetBtn: document.getElementById("mobilePresetBtn"),
+      desktopPresetBtn: document.getElementById("desktopPresetBtn")
+    };
+
+    const state = {
+      paused: false,
+      mouseX: 0,
+      mouseY: 0,
+      time: 0
+    };
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x030303);
+    scene.fog = new THREE.FogExp2(0x000000, Number(ui.fogDensity.value));
+
+    const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 3000);
+    camera.position.set(0, 14, 72);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      powerPreference: "high-performance"
+    });
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.28);
+    scene.add(ambient);
+
+    const hotLight = new THREE.PointLight(0xff9444, 2.6, 400, 2);
+    scene.add(hotLight);
+
+    const coolLight = new THREE.PointLight(0x5f88ff, 1.1, 500, 2);
+    scene.add(coolLight);
+
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(3, 48, 48),
+      new THREE.MeshBasicMaterial({ color: 0x000000 })
+    );
+    scene.add(core);
+
+    const coreGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(4.2, 48, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0xff7a2a,
+        transparent: true,
+        opacity: 0.08
+      })
+    );
+    scene.add(coreGlow);
+
+    const disk = new THREE.Mesh(
+      new THREE.TorusGeometry(8.5, 1.55, 36, 220),
+      new THREE.MeshBasicMaterial({
+        color: 0xff6622,
+        transparent: true,
+        opacity: 0.64
+      })
+    );
+    disk.rotation.x = Math.PI / 2;
+    scene.add(disk);
+
+    const nebula = new THREE.Mesh(
+      new THREE.SphereGeometry(180, 28, 28),
+      new THREE.MeshBasicMaterial({
+        color: 0x25003a,
+        transparent: true,
+        opacity: 0.05,
+        side: THREE.BackSide
+      })
+    );
+    scene.add(nebula);
+
+    let starField = null;
+    let particleSystem = null;
+    let glowParticleSystem = null;
+    let particleGeometry = null;
+    let particleMaterial = null;
+    let glowParticleMaterial = null;
+    let positions = null;
+    let velocities = null;
+    let colors = null;
+
+    function syncLabels() {
+      ui.qualityValue.textContent = ui.quality.value[0].toUpperCase() + ui.quality.value.slice(1);
+      ui.particleCountValue.textContent = ui.particleCount.value;
+      ui.starCountValue.textContent = ui.starCount.value;
+      ui.gravityValue.textContent = Number(ui.gravity.value).toFixed(2);
+      ui.massValue.textContent = ui.mass.value;
+      ui.swirlValue.textContent = Number(ui.swirl.value).toFixed(2);
+      ui.dragValue.textContent = Number(ui.drag.value).toFixed(3);
+      ui.cameraSpeedValue.textContent = Number(ui.cameraSpeed.value).toFixed(4);
+      ui.eventHorizonValue.textContent = Number(ui.eventHorizon.value).toFixed(1);
+      ui.fogDensityValue.textContent = Number(ui.fogDensity.value).toFixed(3);
+    }
+
+    function setRendererScale() {
+      const quality = ui.quality.value;
+      const dpr =
+        quality === "mobile" ? Math.min(window.devicePixelRatio, 1.1) :
+        quality === "balanced" ? Math.min(window.devicePixelRatio, 1.4) :
+        Math.min(window.devicePixelRatio, 1.8);
+
+      renderer.setPixelRatio(dpr);
+      renderer.setSize(innerWidth, innerHeight, false);
+    }
+
+    function buildStars(count) {
+      if (starField) {
+        scene.remove(starField);
+        starField.geometry.dispose();
+        starField.material.dispose();
+      }
+
+      const g = new THREE.BufferGeometry();
+      const arr = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+        arr[i3] = (Math.random() - 0.5) * 1300;
+        arr[i3 + 1] = (Math.random() - 0.5) * 1300;
+        arr[i3 + 2] = (Math.random() - 0.5) * 1300;
+      }
+
+      g.setAttribute("position", new THREE.BufferAttribute(arr, 3));
+
+      const m = new THREE.PointsMaterial({
+        size: isMobile ? 0.85 : 0.7,
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.95
+      });
+
+      starField = new THREE.Points(g, m);
+      scene.add(starField);
+    }
+
+    function buildParticles(count) {
+      if (particleSystem) {
+        scene.remove(particleSystem);
+        particleGeometry.dispose();
+        particleMaterial.dispose();
+      }
+      if (glowParticleSystem) {
+        scene.remove(glowParticleSystem);
+        glowParticleMaterial.dispose();
+      }
+
+      particleGeometry = new THREE.BufferGeometry();
+      positions = new Float32Array(count * 3);
+      velocities = new Float32Array(count * 3);
+      colors = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        const i3 = i * 3;
+        const radius = Math.random() * 56;
+        const angle = Math.random() * Math.PI * 2;
+
+        positions[i3] = Math.cos(angle) * radius;
+        positions[i3 + 1] = (Math.random() - 0.5) * 9;
+        positions[i3 + 2] = Math.sin(angle) * radius;
+
+        velocities[i3] = (Math.random() - 0.5) * 0.018;
+        velocities[i3 + 1] = (Math.random() - 0.5) * 0.018;
+        velocities[i3 + 2] = (Math.random() - 0.5) * 0.018;
+
+        const t = Math.min(radius / 56, 1);
+        colors[i3] = 1.0;
+        colors[i3 + 1] = 0.18 + 0.42 * (1 - t);
+        colors[i3 + 2] = 0.06 + 0.9 * t;
+      }
+
+      particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+      particleMaterial = new THREE.PointsMaterial({
+        size: isMobile ? 0.12 : 0.1,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.92,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      glowParticleMaterial = new THREE.PointsMaterial({
+        size: isMobile ? 0.2 : 0.17,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.06,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending
+      });
+
+      particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+      glowParticleSystem = new THREE.Points(particleGeometry, glowParticleMaterial);
+
+      scene.add(glowParticleSystem);
+      scene.add(particleSystem);
+    }
+
+    function rebuildScene() {
+      setRendererScale();
+      scene.fog = new THREE.FogExp2(0x000000, Number(ui.fogDensity.value));
+      disk.visible = ui.showDisk.checked;
+      nebula.visible = ui.showNebula.checked;
+      buildStars(Number(ui.starCount.value));
+      buildParticles(Number(ui.particleCount.value));
+    }
+
+    function applyPreset(type) {
+      if (type === "mobile") {
+        ui.quality.value = "mobile";
+        ui.particleCount.value = 12000;
+        ui.starCount.value = 1200;
+        ui.gravity.value = 3.5;
+        ui.mass.value = 180;
+        ui.swirl.value = 0.8;
+        ui.drag.value = 0.992;
+        ui.cameraSpeed.value = 0.0014;
+        ui.eventHorizon.value = 4.0;
+        ui.fogDensity.value = 0.012;
+      } else {
+        ui.quality.value = "desktop";
+        ui.particleCount.value = 28000;
+        ui.starCount.value = 2600;
+        ui.gravity.value = 5.4;
+        ui.mass.value = 300;
+        ui.swirl.value = 1.35;
+        ui.drag.value = 0.994;
+        ui.cameraSpeed.value = 0.0020;
+        ui.eventHorizon.value = 5.4;
+        ui.fogDensity.value = 0.019;
+      }
+      syncLabels();
+      rebuildScene();
+    }
+
+    function pointerToGravity(clientX, clientY) {
+      if (!ui.mouseGravity.checked) return;
+      state.mouseX = (clientX / innerWidth - 0.5) * 120;
+      state.mouseY = -(clientY / innerHeight - 0.5) * 120;
+    }
+
+    window.addEventListener("mousemove", (e) => pointerToGravity(e.clientX, e.clientY), { passive: true });
+    window.addEventListener("touchmove", (e) => {
+      const touch = e.touches[0];
+      if (touch) pointerToGravity(touch.clientX, touch.clientY);
+    }, { passive: true });
+
+    function updateParticles() {
+      const pos = particleGeometry.attributes.position.array;
+      const gravity = Number(ui.gravity.value);
+      const mass = Number(ui.mass.value);
+      const swirl = Number(ui.swirl.value);
+      const drag = Number(ui.drag.value);
+      const horizon = Number(ui.eventHorizon.value);
+      const stride = isMobile ? 4 : 2;
+
+      for (let i = 0; i < pos.length / 3; i += stride) {
+        const i3 = i * 3;
+
+        const x = pos[i3];
+        const y = pos[i3 + 1];
+        const z = pos[i3 + 2];
+
+        const dx = -x + state.mouseX * 0.18;
+        const dy = -y + state.mouseY * 0.18;
+        const dz = -z;
+
+        const r = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.001;
+        const force = gravity * mass / (r * r);
+
+        velocities[i3] += (dx / r) * force * 0.0046;
+        velocities[i3 + 1] += (dy / r) * force * 0.0046;
+        velocities[i3 + 2] += (dz / r) * force * 0.0046;
+
+        const temp = velocities[i3];
+        velocities[i3] = -velocities[i3 + 2] * swirl;
+        velocities[i3 + 2] = temp * swirl;
+
+        velocities[i3] *= drag;
+        velocities[i3 + 1] *= drag;
+        velocities[i3 + 2] *= drag;
+
+        if (r < horizon) {
+          velocities[i3] *= 0.22;
+          velocities[i3 + 1] *= 0.22;
+          velocities[i3 + 2] *= 0.22;
+        }
+
+        pos[i3] += velocities[i3];
+        pos[i3 + 1] += velocities[i3 + 1];
+        pos[i3 + 2] += velocities[i3 + 2];
+      }
+
+      particleGeometry.attributes.position.needsUpdate = true;
+    }
+
+    function moveCamera() {
+      if (!ui.autoRotate.checked) return;
+
+      state.time += Number(ui.cameraSpeed.value);
+      const radius =
+        ui.quality.value === "mobile" ? 68 :
+        ui.quality.value === "balanced" ? 82 : 96;
+
+      camera.position.x = Math.sin(state.time) * radius;
+      camera.position.z = Math.cos(state.time) * radius;
+      camera.position.y = Math.sin(state.time * 0.62) * (isMobile ? 16 : 28);
+      camera.lookAt(0, 0, 0);
+    }
+
+    function updateMetrics(frameMs) {
+      metrics.textContent =
+        `Quality: ${ui.quality.value}
+Particles: ${ui.particleCount.value}
+Stars: ${ui.starCount.value}
+Gravity: ${Number(ui.gravity.value).toFixed(2)}
+Mass: ${ui.mass.value}
+Swirl: ${Number(ui.swirl.value).toFixed(2)}
+Frame: ${frameMs.toFixed(2)} ms
+Mobile detected: ${isMobile ? "Yes" : "No"}`;
+    }
+
+    function animate(now = 0) {
+      requestAnimationFrame(animate);
+
+      if (!state.paused) {
+        updateParticles();
+        moveCamera();
+
+        disk.rotation.z += 0.008;
+        nebula.rotation.y += 0.0005;
+
+        const pulse = 1 + Math.sin(Date.now() * 0.0024) * 0.12;
+        core.scale.setScalar(pulse);
+        coreGlow.scale.setScalar(pulse * 1.05);
+
+        hotLight.position.set(
+          Math.sin(state.time * 1.4) * 14,
+          8 + Math.sin(state.time * 2.0) * 4,
+          Math.cos(state.time * 1.4) * 14
+        );
+
+        coolLight.position.set(
+          Math.cos(state.time * 1.05) * 18,
+          -5,
+          Math.sin(state.time * 1.05) * 18
+        );
+      }
+
+      renderer.render(scene, camera);
+      updateMetrics(now);
+    }
+
+    menuToggle.addEventListener("click", () => {
+      controlPanel.classList.toggle("open");
+    });
+
+    ui.pauseBtn.addEventListener("click", () => {
+      state.paused = !state.paused;
+      ui.pauseBtn.textContent = state.paused ? "Resume" : "Pause";
+    });
+
+    ui.resetBtn.addEventListener("click", rebuildScene);
+    ui.mobilePresetBtn.addEventListener("click", () => applyPreset("mobile"));
+    ui.desktopPresetBtn.addEventListener("click", () => applyPreset("desktop"));
+
+    [
+      ui.quality, ui.particleCount, ui.starCount, ui.gravity, ui.mass,
+      ui.swirl, ui.drag, ui.cameraSpeed, ui.eventHorizon, ui.fogDensity,
+      ui.showDisk, ui.showNebula, ui.mouseGravity, ui.autoRotate
+    ].forEach(el => {
+      el.addEventListener("input", () => {
+        syncLabels();
+        rebuildScene();
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      setRendererScale();
+    });
+
+    if (isMobile) {
+      applyPreset("mobile");
+    } else {
+      ui.quality.value = "balanced";
+      syncLabels();
+      rebuildScene();
+    }
+
+    syncLabels();
+    rebuildScene();
+    animate();
+  </script>
 </body>
 </html>
