@@ -14,7 +14,8 @@
     padding: 0;
 }
 
-body, html {
+body,
+html {
     width: 100%;
     height: 100%;
     background: var(--bg-deep);
@@ -67,7 +68,7 @@ body, html {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9), transparent);
 }
 
 .identity h1 {
@@ -129,7 +130,7 @@ body, html {
     display: flex;
     gap: 2rem;
     padding: 0.5rem 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-size: 0.7rem;
 }
 
