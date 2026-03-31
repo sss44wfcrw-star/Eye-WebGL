@@ -2,306 +2,45 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-/>
-<title>PARAKLETOS — Mobile Adaptive Cinematic Engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>PARAKLETOS — INTENSE MODE</title>
 <style>
-  :root {
-    --bg: rgba(0,0,0,0.58);
-    --border: rgba(255,255,255,0.14);
-    --text: #f4f4f4;
-    --muted: #b9b9b9;
-    --accent: #ff8a3d;
-  }
-
   html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
     background: #000;
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    touch-action: none;
   }
-
-  canvas {
-    display: block;
-  }
-
-  #ui {
+  canvas { display: block; }
+  #hud {
     position: fixed;
-    top: env(safe-area-inset-top, 10px);
-    left: env(safe-area-inset-left, 10px);
-    right: auto;
-    width: min(360px, calc(100vw - 20px));
-    max-height: calc(100vh - 20px);
-    overflow: auto;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    padding: 12px;
+    top: 10px;
+    left: 10px;
     z-index: 10;
-    box-sizing: border-box;
-  }
-
-  #ui.collapsed .panel-body {
-    display: none;
-  }
-
-  .topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .title {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-  }
-
-  .sub {
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px 12px;
-  }
-
-  .control {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .control.full {
-    grid-column: 1 / -1;
-  }
-
-  label {
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  input[type="range"] {
-    width: 100%;
-  }
-
-  input[type="checkbox"] {
-    transform: scale(1.1);
-  }
-
-  .row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
-
-  .value {
-    font-size: 11px;
-    color: var(--accent);
-    min-width: 44px;
-    text-align: right;
-  }
-
-  .buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  button {
-    background: rgba(255,255,255,0.08);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 8px;
+    background: rgba(0,0,0,0.45);
+    color: white;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 12px;
-    cursor: pointer;
+    backdrop-filter: blur(8px);
   }
-
-  button:active {
-    transform: scale(0.98);
-  }
-
-  #stats {
-    margin-top: 10px;
-    font-size: 11px;
-    color: var(--muted);
-    line-height: 1.4;
-    white-space: pre-line;
-  }
-
-  @media (max-width: 640px) {
-    #ui {
-      width: calc(100vw - 16px);
-      left: 8px;
-      top: calc(env(safe-area-inset-top, 0px) + 8px);
-      max-height: 58vh;
-      padding: 10px;
-    }
-
-    .grid {
-      grid-template-columns: 1fr;
-    }
-
-    .buttons {
-      grid-template-columns: repeat(2, 1fr);
-    }
+  button {
+    margin-top: 6px;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: #ff6a00;
+    color: white;
+    font-weight: 700;
   }
 </style>
 </head>
 <body>
-
-<div id="ui">
-  <div class="topbar">
-    <div class="title">🧿 PARAKLETOS</div>
-    <button id="togglePanel">Hide</button>
-  </div>
-  <div class="sub">Mobile adaptive cinematic WebGL engine</div>
-
-  <div class="panel-body">
-    <div class="grid">
-      <div class="control">
-        <div class="row">
-          <label for="quality">Quality</label>
-          <span class="value" id="qualityValue">Mobile</span>
-        </div>
-        <select id="quality">
-          <option value="mobile">Mobile</option>
-          <option value="balanced">Balanced</option>
-          <option value="desktop">Desktop</option>
-        </select>
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="particleCount">Particles</label>
-          <span class="value" id="particleCountValue">12000</span>
-        </div>
-        <input id="particleCount" type="range" min="2000" max="40000" step="1000" value="12000" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="gravity">Gravity</label>
-          <span class="value" id="gravityValue">3.50</span>
-        </div>
-        <input id="gravity" type="range" min="0.5" max="10" step="0.1" value="3.5" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="mass">Core Mass</label>
-          <span class="value" id="massValue">180</span>
-        </div>
-        <input id="mass" type="range" min="20" max="600" step="5" value="180" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="swirl">Swirl</label>
-          <span class="value" id="swirlValue">0.80</span>
-        </div>
-        <input id="swirl" type="range" min="0" max="3" step="0.05" value="0.8" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="drag">Drag</label>
-          <span class="value" id="dragValue">0.992</span>
-        </div>
-        <input id="drag" type="range" min="0.94" max="1.0" step="0.001" value="0.992" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="cameraSpeed">Camera</label>
-          <span class="value" id="cameraSpeedValue">0.0015</span>
-        </div>
-        <input id="cameraSpeed" type="range" min="0.0003" max="0.005" step="0.0001" value="0.0015" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="eventHorizon">Horizon</label>
-          <span class="value" id="eventHorizonValue">4.0</span>
-        </div>
-        <input id="eventHorizon" type="range" min="0.5" max="12" step="0.1" value="4.0" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="starCount">Stars</label>
-          <span class="value" id="starCountValue">1200</span>
-        </div>
-        <input id="starCount" type="range" min="200" max="5000" step="100" value="1200" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="fogDensity">Fog</label>
-          <span class="value" id="fogDensityValue">0.012</span>
-        </div>
-        <input id="fogDensity" type="range" min="0.001" max="0.05" step="0.001" value="0.012" />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="showNebula">Nebula</label>
-          <span class="value"></span>
-        </div>
-        <input id="showNebula" type="checkbox" checked />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="showDisk">Disk</label>
-          <span class="value"></span>
-        </div>
-        <input id="showDisk" type="checkbox" checked />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="mouseGravity">Touch Gravity</label>
-          <span class="value"></span>
-        </div>
-        <input id="mouseGravity" type="checkbox" checked />
-      </div>
-
-      <div class="control">
-        <div class="row">
-          <label for="autoRotate">Auto Camera</label>
-          <span class="value"></span>
-        </div>
-        <input id="autoRotate" type="checkbox" checked />
-      </div>
-    </div>
-
-    <div class="buttons">
-      <button id="pauseBtn">Pause</button>
-      <button id="resetBtn">Reset</button>
-      <button id="fullscreenBtn">Fullscreen</button>
-      <button id="presetMobile">iPhone Safe</button>
-      <button id="presetBalanced">Balanced</button>
-      <button id="presetChaos">Chaos</button>
-    </div>
-
-    <div id="stats"></div>
-  </div>
+<div id="hud">
+  PARAKLETOS — INTENSE MODE
+  <button id="burstBtn">Burst</button>
 </div>
 
 <script type="module">
@@ -309,94 +48,62 @@ import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.m
 
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-const state = {
-  paused: false,
-  mouseX: 0,
-  mouseY: 0,
-  mouseEnabled: true,
-  time: 0
-};
-
-const ui = {
-  quality: document.getElementById("quality"),
-  particleCount: document.getElementById("particleCount"),
-  gravity: document.getElementById("gravity"),
-  mass: document.getElementById("mass"),
-  swirl: document.getElementById("swirl"),
-  drag: document.getElementById("drag"),
-  cameraSpeed: document.getElementById("cameraSpeed"),
-  eventHorizon: document.getElementById("eventHorizon"),
-  starCount: document.getElementById("starCount"),
-  fogDensity: document.getElementById("fogDensity"),
-  showNebula: document.getElementById("showNebula"),
-  showDisk: document.getElementById("showDisk"),
-  mouseGravity: document.getElementById("mouseGravity"),
-  autoRotate: document.getElementById("autoRotate"),
-  stats: document.getElementById("stats"),
-  values: {
-    quality: document.getElementById("qualityValue"),
-    particleCount: document.getElementById("particleCountValue"),
-    gravity: document.getElementById("gravityValue"),
-    mass: document.getElementById("massValue"),
-    swirl: document.getElementById("swirlValue"),
-    drag: document.getElementById("dragValue"),
-    cameraSpeed: document.getElementById("cameraSpeedValue"),
-    eventHorizon: document.getElementById("eventHorizonValue"),
-    starCount: document.getElementById("starCountValue"),
-    fogDensity: document.getElementById("fogDensityValue")
-  }
-};
-
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.FogExp2(0x000000, isMobile ? 0.018 : 0.024);
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 3000);
-camera.position.set(0, 12, 70);
+camera.position.set(0, 10, 65);
 
 const renderer = new THREE.WebGLRenderer({
   antialias: true,
   powerPreference: "high-performance"
 });
-
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.2 : 1.8));
+renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const ambient = new THREE.AmbientLight(0xffffff, 0.35);
-scene.add(ambient);
+scene.add(new THREE.AmbientLight(0xffffff, 0.22));
 
-const point = new THREE.PointLight(0xffaa66, 2.8, 500, 2);
-scene.add(point);
+const hotLight = new THREE.PointLight(0xff6a00, 3.5, 400, 2);
+scene.add(hotLight);
 
+const coolLight = new THREE.PointLight(0x66aaff, 1.3, 500, 2);
+scene.add(coolLight);
+
+// Core
 const core = new THREE.Mesh(
-  new THREE.SphereGeometry(3, 48, 48),
+  new THREE.SphereGeometry(3.2, 64, 64),
   new THREE.MeshBasicMaterial({ color: 0x000000 })
 );
 scene.add(core);
 
-const coreHalo = new THREE.Mesh(
-  new THREE.SphereGeometry(3.8, 48, 48),
+const coreGlow = new THREE.Mesh(
+  new THREE.SphereGeometry(4.6, 64, 64),
   new THREE.MeshBasicMaterial({
-    color: 0xff8844,
+    color: 0xff5a00,
     transparent: true,
     opacity: 0.08
   })
 );
-scene.add(coreHalo);
+scene.add(coreGlow);
 
+// Disk
 const disk = new THREE.Mesh(
-  new THREE.TorusGeometry(8, 1.5, 32, 220),
+  new THREE.TorusGeometry(9, 1.7, 36, 260),
   new THREE.MeshBasicMaterial({
-    color: 0xff6622,
+    color: 0xff5a00,
     transparent: true,
-    opacity: 0.65
+    opacity: 0.72
   })
 );
 disk.rotation.x = Math.PI / 2;
 scene.add(disk);
 
+// Nebula shell
 const nebula = new THREE.Mesh(
-  new THREE.SphereGeometry(170, 32, 32),
+  new THREE.SphereGeometry(180, 32, 32),
   new THREE.MeshBasicMaterial({
-    color: 0x2c0847,
+    color: 0x2b003f,
     transparent: true,
     opacity: 0.05,
     side: THREE.BackSide
@@ -404,227 +111,145 @@ const nebula = new THREE.Mesh(
 );
 scene.add(nebula);
 
-let particleSystem = null;
-let starField = null;
-
-let positions = null;
-let velocities = null;
-let colors = null;
-let particleGeometry = null;
-let particleMaterial = null;
-
-const tmpVec = new THREE.Vector3();
-
-function applyQualityPreset(name) {
-  if (name === "mobile") {
-    ui.quality.value = "mobile";
-    ui.particleCount.value = 12000;
-    ui.starCount.value = 1200;
-    ui.gravity.value = 3.5;
-    ui.mass.value = 180;
-    ui.swirl.value = 0.8;
-    ui.drag.value = 0.992;
-    ui.cameraSpeed.value = 0.0015;
-    ui.eventHorizon.value = 4.0;
-    ui.fogDensity.value = 0.012;
-  } else if (name === "balanced") {
-    ui.quality.value = "balanced";
-    ui.particleCount.value = 20000;
-    ui.starCount.value = 2000;
-    ui.gravity.value = 4.5;
-    ui.mass.value = 220;
-    ui.swirl.value = 1.1;
-    ui.drag.value = 0.994;
-    ui.cameraSpeed.value = 0.0017;
-    ui.eventHorizon.value = 4.5;
-    ui.fogDensity.value = 0.016;
-  } else if (name === "desktop") {
-    ui.quality.value = "desktop";
-    ui.particleCount.value = 32000;
-    ui.starCount.value = 3000;
-    ui.gravity.value = 5.2;
-    ui.mass.value = 280;
-    ui.swirl.value = 1.35;
-    ui.drag.value = 0.995;
-    ui.cameraSpeed.value = 0.0019;
-    ui.eventHorizon.value = 5.0;
-    ui.fogDensity.value = 0.02;
-  } else if (name === "chaos") {
-    ui.quality.value = isMobile ? "mobile" : "desktop";
-    ui.particleCount.value = isMobile ? 16000 : 28000;
-    ui.starCount.value = isMobile ? 1600 : 2600;
-    ui.gravity.value = 7.2;
-    ui.mass.value = 360;
-    ui.swirl.value = 2.1;
-    ui.drag.value = 0.989;
-    ui.cameraSpeed.value = 0.0024;
-    ui.eventHorizon.value = 6.4;
-    ui.fogDensity.value = 0.022;
-  }
-  syncLabels();
-  rebuildScene();
-}
-
-function syncLabels() {
-  ui.values.quality.textContent = ui.quality.options[ui.quality.selectedIndex].text;
-  ui.values.particleCount.textContent = ui.particleCount.value;
-  ui.values.gravity.textContent = Number(ui.gravity.value).toFixed(2);
-  ui.values.mass.textContent = ui.mass.value;
-  ui.values.swirl.textContent = Number(ui.swirl.value).toFixed(2);
-  ui.values.drag.textContent = Number(ui.drag.value).toFixed(3);
-  ui.values.cameraSpeed.textContent = Number(ui.cameraSpeed.value).toFixed(4);
-  ui.values.eventHorizon.textContent = Number(ui.eventHorizon.value).toFixed(1);
-  ui.values.starCount.textContent = ui.starCount.value;
-  ui.values.fogDensity.textContent = Number(ui.fogDensity.value).toFixed(3);
-}
-
-function setRendererScale() {
-  const q = ui.quality.value;
-  const dpr =
-    q === "mobile" ? Math.min(window.devicePixelRatio, 1.1) :
-    q === "balanced" ? Math.min(window.devicePixelRatio, 1.4) :
-    Math.min(window.devicePixelRatio, 1.8);
-
-  renderer.setPixelRatio(dpr);
-  renderer.setSize(innerWidth, innerHeight, false);
-}
-
+// Starfield
+let starField;
 function buildStars(count) {
   if (starField) {
     scene.remove(starField);
     starField.geometry.dispose();
     starField.material.dispose();
   }
-
   const g = new THREE.BufferGeometry();
   const arr = new Float32Array(count * 3);
-
   for (let i = 0; i < count; i++) {
     const i3 = i * 3;
-    arr[i3] = (Math.random() - 0.5) * 1200;
-    arr[i3 + 1] = (Math.random() - 0.5) * 1200;
-    arr[i3 + 2] = (Math.random() - 0.5) * 1200;
+    arr[i3] = (Math.random() - 0.5) * 1400;
+    arr[i3 + 1] = (Math.random() - 0.5) * 1400;
+    arr[i3 + 2] = (Math.random() - 0.5) * 1400;
   }
-
   g.setAttribute("position", new THREE.BufferAttribute(arr, 3));
-
   const m = new THREE.PointsMaterial({
-    size: isMobile ? 0.9 : 0.7,
+    size: isMobile ? 0.8 : 0.65,
     color: 0xffffff,
     transparent: true,
     opacity: 0.95
   });
-
   starField = new THREE.Points(g, m);
   scene.add(starField);
 }
+buildStars(isMobile ? 1400 : 2600);
 
-function buildParticles(count) {
-  if (particleSystem) {
-    scene.remove(particleSystem);
-    particleGeometry.dispose();
-    particleMaterial.dispose();
-  }
+// Particles
+const N = isMobile ? 16000 : 28000;
+const particleGeometry = new THREE.BufferGeometry();
+const positions = new Float32Array(N * 3);
+const velocities = new Float32Array(N * 3);
+const colors = new Float32Array(N * 3);
+const sizes = new Float32Array(N);
 
-  particleGeometry = new THREE.BufferGeometry();
-  positions = new Float32Array(count * 3);
-  velocities = new Float32Array(count * 3);
-  colors = new Float32Array(count * 3);
+for (let i = 0; i < N; i++) {
+  const i3 = i * 3;
+  const radius = Math.random() * 58;
+  const angle = Math.random() * Math.PI * 2;
+  const y = (Math.random() - 0.5) * 10;
 
-  for (let i = 0; i < count; i++) {
-    const i3 = i * 3;
-    const radius = Math.random() * 55;
-    const angle = Math.random() * Math.PI * 2;
-    const vertical = (Math.random() - 0.5) * 10;
+  positions[i3] = Math.cos(angle) * radius;
+  positions[i3 + 1] = y;
+  positions[i3 + 2] = Math.sin(angle) * radius;
 
-    positions[i3] = Math.cos(angle) * radius;
-    positions[i3 + 1] = vertical;
-    positions[i3 + 2] = Math.sin(angle) * radius;
+  velocities[i3] = (Math.random() - 0.5) * 0.018;
+  velocities[i3 + 1] = (Math.random() - 0.5) * 0.018;
+  velocities[i3 + 2] = (Math.random() - 0.5) * 0.018;
 
-    velocities[i3] = (Math.random() - 0.5) * 0.02;
-    velocities[i3 + 1] = (Math.random() - 0.5) * 0.02;
-    velocities[i3 + 2] = (Math.random() - 0.5) * 0.02;
+  const t = Math.min(radius / 58, 1);
 
-    const t = Math.min(radius / 55, 1);
-    colors[i3] = 1 - t * 0.25;
-    colors[i3 + 1] = 0.2 + 0.25 * (1 - t);
-    colors[i3 + 2] = 0.8 * t;
-  }
+  // hotter inner colors, cooler outer colors
+  colors[i3] = 1.0;
+  colors[i3 + 1] = 0.12 + 0.45 * (1 - t);
+  colors[i3 + 2] = 0.02 + 0.9 * t;
 
-  particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-  particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-
-  particleMaterial = new THREE.PointsMaterial({
-    size: isMobile ? 0.12 : 0.1,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.92,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending
-  });
-
-  particleSystem = new THREE.Points(particleGeometry, particleMaterial);
-  scene.add(particleSystem);
+  sizes[i] = radius < 10 ? 0.16 : radius < 25 ? 0.11 : 0.08;
 }
 
-function rebuildScene() {
-  setRendererScale();
-  scene.fog = new THREE.FogExp2(0x000000, Number(ui.fogDensity.value));
-  disk.visible = ui.showDisk.checked;
-  nebula.visible = ui.showNebula.checked;
-  state.mouseEnabled = ui.mouseGravity.checked;
+particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
 
-  buildStars(Number(ui.starCount.value));
-  buildParticles(Number(ui.particleCount.value));
+const particleMaterial = new THREE.PointsMaterial({
+  size: 0.11,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.95,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+});
+
+const particles = new THREE.Points(particleGeometry, particleMaterial);
+scene.add(particles);
+
+// Larger soft glow shell using duplicated points
+const glowMaterial = new THREE.PointsMaterial({
+  size: 0.22,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.06,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending
+});
+const glowParticles = new THREE.Points(particleGeometry, glowMaterial);
+scene.add(glowParticles);
+
+const state = {
+  mouseX: 0,
+  mouseY: 0,
+  t: 0,
+  burst: 0
+};
+
+function pointerToGravity(clientX, clientY) {
+  state.mouseX = (clientX / innerWidth - 0.5) * 120;
+  state.mouseY = -(clientY / innerHeight - 0.5) * 120;
 }
 
-function resetSystem() {
-  rebuildScene();
-}
+window.addEventListener("mousemove", (e) => pointerToGravity(e.clientX, e.clientY), { passive: true });
+window.addEventListener("touchmove", (e) => {
+  const touch = e.touches[0];
+  if (touch) pointerToGravity(touch.clientX, touch.clientY);
+}, { passive: true });
 
-function updateStats(dtMs) {
-  const q = ui.quality.value;
-  const particleCount = Number(ui.particleCount.value);
-  const gravity = Number(ui.gravity.value);
-  const mass = Number(ui.mass.value);
-  const swirl = Number(ui.swirl.value);
+document.getElementById("burstBtn").addEventListener("click", () => {
+  state.burst = 1.0;
+});
 
-  ui.stats.textContent =
-    `Quality: ${q}
-Particles: ${particleCount}
-Gravity: ${gravity.toFixed(2)}
-Mass: ${mass.toFixed(0)}
-Swirl: ${swirl.toFixed(2)}
-Frame: ${dtMs.toFixed(2)} ms
-Mobile mode: ${isMobile ? "Yes" : "No"}`;
-}
+// Tuned for “intense” but still runnable
+const gravity = isMobile ? 4.6 : 5.8;
+const mass = isMobile ? 220 : 320;
+const swirl = isMobile ? 1.25 : 1.55;
+const drag = 0.992;
+const eventHorizon = isMobile ? 4.2 : 5.2;
 
 function updateParticles() {
   const pos = particleGeometry.attributes.position.array;
-  const gravity = Number(ui.gravity.value);
-  const mass = Number(ui.mass.value);
-  const swirl = Number(ui.swirl.value);
-  const drag = Number(ui.drag.value);
-  const horizon = Number(ui.eventHorizon.value);
   const stride = isMobile ? 4 : 2;
 
-  for (let i = 0; i < pos.length / 3; i += stride) {
+  for (let i = 0; i < N; i += stride) {
     const i3 = i * 3;
 
     const x = pos[i3];
     const y = pos[i3 + 1];
     const z = pos[i3 + 2];
 
-    const dx = -x + state.mouseX * 0.18;
-    const dy = -y + state.mouseY * 0.18;
+    const dx = -x + state.mouseX * 0.16;
+    const dy = -y + state.mouseY * 0.16;
     const dz = -z;
 
     const r = Math.sqrt(dx * dx + dy * dy + dz * dz) + 0.001;
     const force = gravity * mass / (r * r);
 
-    velocities[i3] += (dx / r) * force * 0.0045;
-    velocities[i3 + 1] += (dy / r) * force * 0.0045;
-    velocities[i3 + 2] += (dz / r) * force * 0.0045;
+    const burstBoost = 1 + state.burst * 1.8;
+
+    velocities[i3] += (dx / r) * force * 0.0048 * burstBoost;
+    velocities[i3 + 1] += (dy / r) * force * 0.0048 * burstBoost;
+    velocities[i3 + 2] += (dz / r) * force * 0.0048 * burstBoost;
 
     const temp = velocities[i3];
     velocities[i3] = -velocities[i3 + 2] * swirl;
@@ -634,10 +259,10 @@ function updateParticles() {
     velocities[i3 + 1] *= drag;
     velocities[i3 + 2] *= drag;
 
-    if (r < horizon) {
-      velocities[i3] *= 0.25;
-      velocities[i3 + 1] *= 0.25;
-      velocities[i3 + 2] *= 0.25;
+    if (r < eventHorizon) {
+      velocities[i3] *= 0.2;
+      velocities[i3 + 1] *= 0.2;
+      velocities[i3 + 2] *= 0.2;
     }
 
     pos[i3] += velocities[i3];
@@ -649,119 +274,56 @@ function updateParticles() {
 }
 
 function moveCamera() {
-  if (!ui.autoRotate.checked) return;
+  state.t += isMobile ? 0.0018 : 0.0022;
+  const radius = isMobile ? 74 : 92;
 
-  state.time += Number(ui.cameraSpeed.value);
+  camera.position.x = Math.sin(state.t) * radius;
+  camera.position.z = Math.cos(state.t) * radius;
+  camera.position.y = Math.sin(state.t * 0.7) * (isMobile ? 18 : 28);
 
-  const radius =
-    ui.quality.value === "mobile" ? 68 :
-    ui.quality.value === "balanced" ? 80 : 95;
-
-  camera.position.x = Math.sin(state.time) * radius;
-  camera.position.z = Math.cos(state.time) * radius;
-  camera.position.y = Math.sin(state.time * 0.55) * (isMobile ? 16 : 28);
   camera.lookAt(0, 0, 0);
 }
 
-function animate(now = 0) {
+function animate() {
   requestAnimationFrame(animate);
 
-  if (!state.paused) {
-    updateParticles();
-    moveCamera();
+  updateParticles();
+  moveCamera();
 
-    disk.rotation.z += 0.006;
-    nebula.rotation.y += 0.00035;
-    core.scale.setScalar(1 + Math.sin(Date.now() * 0.002) * 0.15);
-    coreHalo.scale.copy(core.scale).multiplyScalar(1.06);
-  }
+  disk.rotation.z += 0.012;
+  nebula.rotation.y += 0.0007;
 
-  point.position.set(
-    Math.sin(state.time * 1.3) * 12,
-    8 + Math.sin(state.time * 2.0) * 4,
-    Math.cos(state.time * 1.3) * 12
+  const pulse = 1 + Math.sin(Date.now() * 0.003) * 0.14 + state.burst * 0.18;
+  core.scale.setScalar(pulse);
+  coreGlow.scale.setScalar(pulse * 1.05);
+
+  hotLight.position.set(
+    Math.sin(state.t * 1.6) * 14,
+    8 + Math.sin(state.t * 2.1) * 5,
+    Math.cos(state.t * 1.6) * 14
   );
 
+  coolLight.position.set(
+    Math.cos(state.t * 1.1) * 20,
+    -6,
+    Math.sin(state.t * 1.1) * 20
+  );
+
+  state.burst *= 0.96;
+
   renderer.render(scene, camera);
-  updateStats(now);
 }
-
-function onPointerMove(clientX, clientY) {
-  if (!state.mouseEnabled) return;
-  state.mouseX = (clientX / innerWidth - 0.5) * 120;
-  state.mouseY = -(clientY / innerHeight - 0.5) * 120;
-}
-
-window.addEventListener("mousemove", (e) => onPointerMove(e.clientX, e.clientY), { passive: true });
-window.addEventListener("touchmove", (e) => {
-  const touch = e.touches[0];
-  if (touch) onPointerMove(touch.clientX, touch.clientY);
-}, { passive: true });
 
 window.addEventListener("resize", () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
-  setRendererScale();
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.2 : 1.8));
+  renderer.setSize(innerWidth, innerHeight);
 });
 
-document.getElementById("pauseBtn").addEventListener("click", () => {
-  state.paused = !state.paused;
-  document.getElementById("pauseBtn").textContent = state.paused ? "Resume" : "Pause";
-});
-
-document.getElementById("resetBtn").addEventListener("click", resetSystem);
-
-document.getElementById("fullscreenBtn").addEventListener("click", async () => {
-  if (!document.fullscreenElement) {
-    await document.documentElement.requestFullscreen?.();
-  } else {
-    await document.exitFullscreen?.();
-  }
-});
-
-document.getElementById("presetMobile").addEventListener("click", () => applyQualityPreset("mobile"));
-document.getElementById("presetBalanced").addEventListener("click", () => applyQualityPreset("balanced"));
-document.getElementById("presetChaos").addEventListener("click", () => applyQualityPreset("chaos"));
-
-document.getElementById("togglePanel").addEventListener("click", () => {
-  const panel = document.getElementById("ui");
-  panel.classList.toggle("collapsed");
-  document.getElementById("togglePanel").textContent =
-    panel.classList.contains("collapsed") ? "Show" : "Hide";
-});
-
-[
-  ui.quality,
-  ui.particleCount,
-  ui.gravity,
-  ui.mass,
-  ui.swirl,
-  ui.drag,
-  ui.cameraSpeed,
-  ui.eventHorizon,
-  ui.starCount,
-  ui.fogDensity,
-  ui.showNebula,
-  ui.showDisk,
-  ui.mouseGravity,
-  ui.autoRotate
-].forEach(el => {
-  el.addEventListener("input", () => {
-    syncLabels();
-    rebuildScene();
-  });
-});
-
-if (isMobile) {
-  applyQualityPreset("mobile");
-} else {
-  applyQualityPreset("balanced");
-}
-
-syncLabels();
-rebuildScene();
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.2 : 1.8));
+renderer.setSize(innerWidth, innerHeight);
 animate();
 </script>
-
 </body>
 </html>
