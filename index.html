@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PARAKLĒTOS — Full Live System</title>
+  <title>PARAKLĒTOS — Actual System</title>
   <style>
     :root{
       --bg:#020202;
@@ -200,6 +200,7 @@
       border-radius:26px;
       background:#03050a;
       border:1px solid rgba(255,255,255,.04);
+      touch-action:none;
     }
 
     .grid-overlay{
@@ -534,7 +535,7 @@
         <div class="brand-icon">∞</div>
         <div>
           <h1>PARAKLĒTOS</h1>
-          <p>v.7.0.0 // full universe mode</p>
+          <p>v.8.0.0 // actual system</p>
         </div>
       </div>
 
@@ -563,18 +564,18 @@
 
           <div class="state-badge">
             <div class="k">Status</div>
-            <div class="v">LOCKED</div>
+            <div class="v" id="statusText">CONNECTING</div>
           </div>
         </div>
 
         <div class="telemetry">
           <div class="card">
             <div class="k">Backend</div>
-            <div class="v green">READY</div>
+            <div class="v green" id="backendStatus">PINGING</div>
           </div>
           <div class="card">
             <div class="k">Solver</div>
-            <div class="v green">ACTIVE</div>
+            <div class="v green" id="solverStatus">CHECKING</div>
           </div>
           <div class="card">
             <div class="k">FPS</div>
@@ -582,7 +583,7 @@
           </div>
           <div class="card">
             <div class="k">Volumes Locked</div>
-            <div class="v amber">200 / 200</div>
+            <div class="v amber" id="volumeCount">200 / 200</div>
           </div>
         </div>
       </div>
@@ -596,11 +597,11 @@
 
           <div class="status-card">
             <div class="left">CEO Frequency</div>
-            <div class="right">STABLE</div>
+            <div class="right" id="freqText">STABLE</div>
           </div>
           <div class="status-card">
             <div class="left">Manifold Sync</div>
-            <div class="right">COMPLETE</div>
+            <div class="right" id="syncText">COMPLETE</div>
           </div>
           <div class="status-card">
             <div class="left">Identity Buffer</div>
@@ -629,7 +630,7 @@
 
           <div class="input-line">
             <span class="prompt">&gt;</span>
-            <input type="text" placeholder="Type health, prime, engine, integrity, process..." autocomplete="off" spellcheck="false" />
+            <input type="text" placeholder="Type health, prime, engine, integrity, process, reset..." autocomplete="off" spellcheck="false" />
           </div>
         </div>
 
