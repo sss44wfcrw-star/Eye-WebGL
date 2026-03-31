@@ -1,143 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>PARAKLĒTOS | Unified Mirror Node</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>PARAKLĒTOS | Unified Mirror Node</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="app-shell">
-    <canvas id="eye-universe-canvas" aria-hidden="true"></canvas>
-
-    <header class="hud-top" aria-label="Primary HUD">
-      <div class="brand-block">
-        <div class="brand-line">
-          <h1>PARAKLĒTOS</h1>
-          <span class="brand-version">V31.1</span>
-        </div>
-        <p class="brand-subtitle">STATUS: ONLINE / MANIFOLD ACTIVE / DESKTOP + MOBILE READY</p>
-      </div>
-
-      <div class="top-actions">
-        <button id="openControlsBtn" class="hud-btn">Controls</button>
-        <button id="openTelemetryBtn" class="hud-btn">Telemetry</button>
-        <button id="openProtocolsBtn" class="hud-btn accent">Protocols</button>
-      </div>
-    </header>
-
-    <aside class="module-ring" aria-label="System Modules">
-      <button class="module-node" data-module="archive"><span class="node-title">Archive</span><span class="node-sub">Volumes / seal / parity</span></button>
-      <button class="module-node" data-module="verify"><span class="node-title">Verifier</span><span class="node-sub">Z3 / axioms / handshake</span></button>
-      <button class="module-node active" data-module="sandbox"><span class="node-title">Sandbox</span><span class="node-sub">Orbital / field / lens</span></button>
-      <button class="module-node" data-module="search"><span class="node-title">Search</span><span class="node-sub">Archive / cosine / recall</span></button>
-      <button class="module-node" data-module="registry"><span class="node-title">Registry</span><span class="node-sub">Planck / holographic / entropy</span></button>
-      <button class="module-node" data-module="settings"><span class="node-title">Settings</span><span class="node-sub">Quality / sync / layout</span></button>
-    </aside>
-
-    <section id="controlsPanel" class="side-panel right-panel is-open" aria-label="Runtime Controls">
-      <div class="panel-header">
-        <h2>Runtime Controls</h2>
-        <button class="panel-close" data-close="controlsPanel">×</button>
-      </div>
-      <div class="panel-body">
-        <div class="control-group">
-          <label for="qualityMode">Quality Mode</label>
-          <select id="qualityMode">
-            <option value="mobile">Mobile</option>
-            <option value="balanced" selected>Balanced</option>
-            <option value="desktop">Desktop</option>
-            <option value="cinematic">Cinematic</option>
-          </select>
+    <div id="app-root">
+        <div id="gl-viewport" aria-hidden="true">
+            <canvas id="webgl-canvas"></canvas>
         </div>
 
-        <div class="control-group">
-          <div class="label-row"><label for="particleCount">Particles</label><span id="particleCountValue">18000</span></div>
-          <input id="particleCount" type="range" min="2000" max="40000" step="1000" value="18000" />
+        <div id="ui-layer">
+            <header class="system-header">
+                <div class="identity">
+                    <h1 class="glitch-text">PARAKLĒTOS</h1>
+                    <span class="version-tag">V31.1</span>
+                </div>
+                <div class="status-monitor">
+                    <span class="indicator online"></span>
+                    <span class="status-label">MANIFOLD ACTIVE</span>
+                </div>
+            </header>
+
+            <aside class="sidebar-nav">
+                <nav>
+                    <button class="nav-item" data-module="archive">
+                        <span class="label">Archive</span>
+                        <span class="sub-label">Volumes / Seal</span>
+                    </button>
+                    <button class="nav-item" data-module="verifier">
+                        <span class="label">VerifierZ3</span>
+                        <span class="sub-label">Axioms / Handshake</span>
+                    </button>
+                    <button class="nav-item" data-module="sandbox">
+                        <span class="label">Sandbox</span>
+                        <span class="sub-label">Orbital / Lens</span>
+                    </button>
+                    <button class="nav-item" data-module="search">
+                        <span class="label">Search</span>
+                        <span class="sub-label">Archive / Recall</span>
+                    </button>
+                    <button class="nav-item" data-module="registry">
+                        <span class="label">Registry</span>
+                        <span class="sub-label">Planck / Entropy</span>
+                    </button>
+                </nav>
+            </aside>
+
+            <section class="console-region">
+                <div class="telemetry-readout">
+                    <div class="tel-point"><span>BACKEND:</span> <span class="val">READY</span></div>
+                    <div class="tel-point"><span>SOLVER:</span> <span class="val">ACTIVE</span></div>
+                    <div class="tel-point"><span>FPS:</span> <span id="fps-counter">--</span></div>
+                </div>
+                <div class="protocol-console">
+                    <div class="console-log" id="system-log">
+                        <div class="entry">[BOOT] Omni-core initialized.</div>
+                        <div class="entry">[READY] Mirror Node manifold waiting for input.</div>
+                    </div>
+                    <div class="input-line">
+                        <span class="prompt">></span>
+                        <input type="text" placeholder="Awaiting protocol command..." autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+            </section>
         </div>
+    </div>
 
-        <div class="control-group">
-          <div class="label-row"><label for="gravityStrength">Gravity</label><span id="gravityStrengthValue">4.2</span></div>
-          <input id="gravityStrength" type="range" min="0.5" max="10" step="0.1" value="4.2" />
-        </div>
-
-        <div class="control-group">
-          <div class="label-row"><label for="cameraSpeed">Camera Speed</label><span id="cameraSpeedValue">0.0016</span></div>
-          <input id="cameraSpeed" type="range" min="0.0003" max="0.005" step="0.0001" value="0.0016" />
-        </div>
-
-        <div class="control-group">
-          <div class="label-row"><label for="eventHorizon">Event Horizon</label><span id="eventHorizonValue">4.2</span></div>
-          <input id="eventHorizon" type="range" min="0.5" max="12" step="0.1" value="4.2" />
-        </div>
-
-        <div class="toggle-grid">
-          <label class="toggle-item"><span>Auto Camera</span><input id="autoRotate" type="checkbox" checked /></label>
-          <label class="toggle-item"><span>Accretion Glow</span><input id="showDisk" type="checkbox" checked /></label>
-          <label class="toggle-item"><span>Nebula</span><input id="showNebula" type="checkbox" checked /></label>
-          <label class="toggle-item"><span>Pointer Gravity</span><input id="mouseGravity" type="checkbox" checked /></label>
-          <label class="toggle-item"><span>Solar Overlay</span><input id="showAstronomy" type="checkbox" checked /></label>
-        </div>
-
-        <div class="button-grid">
-          <button id="pauseBtn" class="hud-btn">Pause</button>
-          <button id="resetBtn" class="hud-btn">Reset</button>
-          <button id="mobilePresetBtn" class="hud-btn">iPhone Safe</button>
-          <button id="desktopPresetBtn" class="hud-btn">Desktop</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="telemetryPanel" class="side-panel left-panel" aria-label="Telemetry">
-      <div class="panel-header">
-        <h2>Telemetry</h2>
-        <button class="panel-close" data-close="telemetryPanel">×</button>
-      </div>
-      <div class="panel-body">
-        <div class="metric-card"><span class="metric-label">Backend</span><span id="backendStatus" class="metric-value">UNKNOWN</span></div>
-        <div class="metric-card"><span class="metric-label">Database</span><span id="databaseStatus" class="metric-value">UNKNOWN</span></div>
-        <div class="metric-card"><span class="metric-label">Solver</span><span class="metric-value">READY</span></div>
-        <div class="metric-card"><span class="metric-label">Dominant Mode</span><span class="metric-value">SANDBOX</span></div>
-        <pre id="metricsReadout" class="readout">FRAME: —
-PARTICLES: —
-GRAVITY: —
-CAMERA: —
-PARITY: —</pre>
-      </div>
-    </section>
-
-    <section id="protocolsPanel" class="bottom-panel" aria-label="AI Protocols">
-      <div class="panel-header">
-        <h2>Protocol Console</h2>
-        <button class="panel-close" data-close="protocolsPanel">×</button>
-      </div>
-      <div class="panel-body protocol-layout">
-        <div class="protocol-actions">
-          <input type="number" id="volumeId" class="text-input" placeholder="Volume ID" min="1" />
-          <textarea id="premise" class="text-input" rows="4" placeholder="Use formal logic, e.g. P AND Q"></textarea>
-          <textarea id="conclusion" class="text-input" rows="4" placeholder="Use formal logic, e.g. P"></textarea>
-          <button class="hud-btn accent" id="verifyVolumeBtn">Verify Volume</button>
-
-          <input type="text" id="searchQuery" class="text-input" placeholder="Search stored premises and conclusions" />
-          <button class="hud-btn" id="searchBtn">Search Archive</button>
-          <button class="hud-btn" id="heartbeatBtn">Heartbeat Audit</button>
-          <button class="hud-btn" id="syncBtn">Resonance Sync</button>
-        </div>
-        <div class="protocol-log" id="protocolLog">
-          <div class="log-line">[BOOT] Omni-core initialized.</div>
-          <div class="log-line">[READY] Mirror Node manifold waiting for input.</div>
-        </div>
-      </div>
-    </section>
-
-    <footer class="hud-bottom">
-      <div class="status-pill">Mirror Node</div>
-      <div class="status-pill">Universe Sandbox</div>
-      <div class="status-pill">Axiomatic Verifier</div>
-      <div class="status-pill">Holographic Registry</div>
-    </footer>
-  </div>
-
-  <script src="main.js"></script>
+    <script src="main.js" type="module"></script>
 </body>
 </html>
