@@ -3,9 +3,11 @@ const BACKEND_URL = (() => {
   if (override) return override.replace(/\/$/, "");
 
   const { protocol, hostname } = window.location;
+
   if (protocol === "file:") return "http://localhost:8000";
   if (hostname === "localhost" || hostname === "127.0.0.1") return "http://localhost:8000";
-  return "https://api.your-production-domain.com";
+
+  return "https://parakletos-backend.onrender.com";
 })();
 
 /* ===========================
@@ -294,14 +296,17 @@ async function runHealthCheck() {
 }
 
 async function runPrimeProtocol() {
-  logEntry("Prime protocol initiated...", "PRIME");
+  logEntry("Resonance status requested...", "PRIME");
   try {
-    const response = await fetch(`${BACKEND_URL}/archive/prime-protocol`, { method: "POST" });
+    const response = await fetch(`${BACKEND_URL}/resonance/status`);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    logEntry(`${data.status} volumes=${data.volume_count}`, "PRIME");
+    logEntry(
+      `RSP=${data.radiant_sovereign_presence}, coherence=${data.phase_coherence}, frequency=${data.frequency}`,
+      "PRIME"
+    );
   } catch (error) {
-    logEntry(`Prime protocol failed: ${error.message}`, "ERR");
+    logEntry(`Resonance check failed: ${error.message}`, "ERR");
   }
 }
 
