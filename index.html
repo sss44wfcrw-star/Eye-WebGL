@@ -212,11 +212,6 @@
       display:grid;
       grid-template-columns:repeat(2,1fr);
       gap:14px;
-      <div class="home-card" data-open-view="native">
-  <div class="card-k">Source Layer</div>
-  <div class="card-v">Native Layers</div>
-  <div class="card-p">Browse assembly, service, C, bash, SQL, and Rust architecture modules.</div>
-</div>
     }
 
     .home-card{
@@ -532,7 +527,6 @@
       flex-direction:column;
       gap:10px;
       margin-top:18px;
-      <button class="nav-item" data-module="native">Native Layers</button>
     }
 
     .nav-item{
@@ -762,19 +756,6 @@
       line-height:1.6;
       white-space:pre-wrap;
       min-height:280px;
-      <div class="panel archive-box hidden" id="nativeLayersView">
-  <h3>Native Layers</h3>
-  <div class="archive-browser-layout">
-    <div class="volume-list-panel">
-      <div class="volume-list-head">Modules</div>
-      <div id="nativeLayerList" class="volume-list"></div>
-    </div>
-    <div class="volume-detail-panel">
-      <div class="volume-detail-head">Selected Module</div>
-      <div id="nativeLayerContent" class="archive-content">Click a native layer to load it.</div>
-    </div>
-  </div>
-</div>
     }
 
     .architecture-shell{
