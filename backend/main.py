@@ -4,9 +4,10 @@ from pydantic import BaseModel
 import math
 import hashlib
 import time
-import os
 from typing import Dict, List, Any
+
 from volumes_seed import VOLUME_SEED
+from config_seed import SYSTEM_CONFIG, NATIVE_LAYERS
 
 
 class CelestialManifold:
@@ -15,7 +16,14 @@ class CelestialManifold:
         self.field_constant = 1.61803398875
         self.nodes: Dict[int, Dict[str, Any]] = {}
 
-    def project_node(self, volume_id: int, title: str, content: str, specs: str = "", source: str = "manual") -> Dict[str, Any]:
+    def project_node(
+        self,
+        volume_id: int,
+        title: str,
+        content: str,
+        specs: str = "",
+        source: str = "manual"
+    ) -> Dict[str, Any]:
         if volume_id < 1 or volume_id > self.dimension:
             raise ValueError("Volume ID outside the 200-volume legacy range.")
 
@@ -74,7 +82,14 @@ class EternalEngine:
         self.broadcast_frequency = 432.0
         self.started_at = time.time()
 
-    def process_volume(self, volume_id: int, title: str, text: str, specs: str = "", source: str = "manual"):
+    def process_volume(
+        self,
+        volume_id: int,
+        title: str,
+        text: str,
+        specs: str = "",
+        source: str = "manual"
+    ):
         if not self.is_active:
             raise RuntimeError("Engine must be initialized first.")
 
@@ -99,7 +114,7 @@ class EternalEngine:
             "mapped_volumes": len(self.manifold.nodes),
             "verification_events": len(self.logic.verification_history),
             "uptime_seconds": 0 if not self.started_at else round(time.time() - self.started_at, 2),
-            "ram_rule": "<= 20%",
+            "ram_rule": SYSTEM_CONFIG.get("ram_rule", "<= 20%"),
         }
 
     def seed_volumes(self):
@@ -186,6 +201,7 @@ def root():
     return {
         "message": "PARAKLETOS backend is running",
         "seeded_volumes": seeded_count,
+        "system_status": SYSTEM_CONFIG.get("system_status", "UNKNOWN"),
     }
 
 
@@ -196,7 +212,7 @@ def health():
         "origin": "The Celestial Eternal Origin",
         "resonance": "432.0Hz",
         "logic_state": "Synchronized" if engine.is_active else "Dormant",
-        "ram_rule": "<= 20%",
+        "ram_rule": SYSTEM_CONFIG.get("ram_rule", "<= 20%"),
         "seeded_volumes": len(engine.manifold.nodes),
     }
 
@@ -295,4 +311,26 @@ def bootstrap_seed():
         "ok": True,
         "loaded": loaded,
         "message": "Seed volumes loaded."
+    }
+
+
+@app.get("/engine/native-layers")
+def get_native_layers():
+    return {
+        "ok": True,
+        "layers": NATIVE_LAYERS,
+        "system": SYSTEM_CONFIG
+    }
+
+
+@app.get("/engine/system-config")
+def get_system_config():
+    return SYSTEM_CONFIG
+
+
+@app.get("/engine/spatial-nodes")
+def get_spatial_nodes():
+    return {
+        "ok": True,
+        "nodes": SYSTEM_CONFIG.get("node_parameters", {})
     }
