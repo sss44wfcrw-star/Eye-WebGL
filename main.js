@@ -45,9 +45,19 @@ const gridOverlay = document.getElementById("gridOverlay");
 const archiveView = document.getElementById("archiveView");
 const diagnosticsView = document.getElementById("diagnosticsView");
 const terminalView = document.getElementById("terminalView");
+const architectureView = document.getElementById("architectureView");
+
 const archiveContent = document.getElementById("archiveContent");
 const diagContent = document.getElementById("diagContent");
 const volumeList = document.getElementById("volumeList");
+
+const torusCanvas = document.getElementById("torusCanvas");
+const torusCtx = torusCanvas?.getContext("2d");
+const freqCanvas = document.getElementById("freqCanvas");
+const freqCtx = freqCanvas?.getContext("2d");
+const sectorGrid = document.getElementById("sectorGrid");
+const progressBar = document.getElementById("progressBar");
+const logicLog = document.getElementById("logicLog");
 
 /* controls */
 const zoomSlider = document.getElementById("zoomSlider");
@@ -115,16 +125,18 @@ let cycleCount = 0;
 let dragging = false;
 let lastPointerX = 0;
 let lastPointerY = 0;
+let torusAngle = 0;
+let freqOffset = 0;
+let ficStarted = false;
 
 const state = {
   autoRotate: false,
   showLabels: true,
-  glowStrength: 1,
+  glowStrength: 0.8,
   orbitStretch: 0.36,
   rotationSpeedFactor: 1,
   stars: [],
   particles: [],
-  rings: [70, 110, 155, 210, 270],
   camera: {
     rotation: 0,
     zoom: 1,
@@ -160,6 +172,7 @@ function showApp(view = "universe") {
   archiveView.classList.add("hidden");
   diagnosticsView.classList.add("hidden");
   terminalView.classList.add("hidden");
+  architectureView.classList.add("hidden");
 
   navItems.forEach((n) => n.classList.remove("active"));
 
@@ -174,6 +187,11 @@ function showApp(view = "universe") {
   } else if (view === "terminal") {
     terminalView.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="terminal"]')?.classList.add("active");
+  } else if (view === "architecture") {
+    architectureView.classList.remove("hidden");
+    terminalView.classList.remove("hidden");
+    document.querySelector('.nav-item[data-module="architecture"]')?.classList.add("active");
+    runMasterFIC();
   } else {
     terminalView.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="universe"]')?.classList.add("active");
@@ -195,24 +213,38 @@ function resizeCanvas() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
+function resizeInnerCanvas(cnv) {
+  if (!cnv) return;
+  const rect = cnv.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cnv.width = Math.max(1, Math.floor(rect.width * dpr));
+  cnv.height = Math.max(1, Math.floor(rect.height * dpr));
+  const c = cnv.getContext("2d");
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function isVisible(el) {
+  return !!el && !el.classList.contains("hidden");
+}
+
 function initScene(
-  starCount = Number(starCountSlider?.value || 1400),
-  particleCount = Number(particleCountSlider?.value || 260)
+  starCount = Number(starCountSlider?.value || 600),
+  particleCount = Number(particleCountSlider?.value || 120)
 ) {
   state.stars = Array.from({ length: starCount }, () => ({
     x: Math.random(),
     y: Math.random(),
     z: Math.random() * 0.9 + 0.1,
-    size: Math.random() * 2 + 0.4,
-    alpha: Math.random() * 0.7 + 0.15
+    size: Math.random() * 1.4 + 0.3,
+    alpha: Math.random() * 0.6 + 0.15
   }));
 
   state.particles = Array.from({ length: particleCount }, (_, i) => ({
     angle: (Math.PI * 2 * i) / particleCount,
-    orbit: 60 + Math.random() * 150,
-    speed: 0.0015 + Math.random() * 0.0045,
-    size: Math.random() * 2.6 + 0.7,
-    alpha: Math.random() * 0.65 + 0.15
+    orbit: 60 + Math.random() * 120,
+    speed: 0.0012 + Math.random() * 0.003,
+    size: Math.random() * 1.6 + 0.6,
+    alpha: Math.random() * 0.5 + 0.15
   }));
 }
 
@@ -226,44 +258,50 @@ function syncControlLabels() {
   if (labelsValue) labelsValue.textContent = state.showLabels ? "ON" : "OFF";
 }
 
-function spawnReactionBurst(x, y, amount = 18, color = "0,255,204") {
+function spawnReactionBurst(x, y, amount = 12, color = "0,255,204") {
+  const MAX_BURSTS = 350;
+
   for (let i = 0; i < amount; i += 1) {
     state.reactionBursts.push({
       x,
       y,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
       life: 1,
-      decay: 0.015 + Math.random() * 0.02,
-      size: 1 + Math.random() * 4,
+      decay: 0.025 + Math.random() * 0.02,
+      size: 1 + Math.random() * 2.5,
       color
     });
+  }
+
+  if (state.reactionBursts.length > MAX_BURSTS) {
+    state.reactionBursts.splice(0, state.reactionBursts.length - MAX_BURSTS);
   }
 }
 
 function spawnVolumeCluster(volumeNumber = 1) {
   const angle = Math.random() * Math.PI * 2;
-  const radius = 120 + volumeNumber * 12;
+  const radius = 120 + volumeNumber * 6;
 
   state.nodeClusters.push({
     volume: volumeNumber,
     angle,
     radius,
-    orbitSpeed: 0.002 + Math.random() * 0.003,
-    size: 5 + Math.min(14, volumeNumber * 0.2),
-    alpha: 0.75,
+    orbitSpeed: 0.0015 + Math.random() * 0.002,
+    size: 4 + Math.min(8, volumeNumber * 0.05),
+    alpha: 0.7,
     color: volumeNumber % 2 === 0 ? "#22d3ee" : "#f59e0b"
   });
 
   if (state.nodeClusters.length > 200) {
-    state.nodeClusters.shift();
+    state.nodeClusters.splice(0, state.nodeClusters.length - 200);
   }
 }
 
 function reactToMappedVolumes(count) {
   state.mappedVolumes = count;
-  state.universePulse = Math.min(1.8, 1 + count * 0.02);
-  state.resonanceBoost = Math.min(2.5, 1 + count * 0.01);
+  state.universePulse = Math.min(1.35, 1 + count * 0.005);
+  state.resonanceBoost = Math.min(1.8, 1 + count * 0.004);
 
   while (state.nodeClusters.length < count) {
     spawnVolumeCluster(state.nodeClusters.length + 1);
@@ -273,9 +311,11 @@ function reactToMappedVolumes(count) {
     state.nodeClusters.length = count;
   }
 
-  const cx = width / 2 + state.camera.dragX * 0.15;
-  const cy = height / 2 + state.camera.dragY * 0.15;
-  spawnReactionBurst(cx, cy, Math.min(20, 8 + Math.floor(count / 10)), "34,211,238");
+  if (count > 0 && count % 10 === 0) {
+    const cx = width / 2 + state.camera.dragX * 0.15;
+    const cy = height / 2 + state.camera.dragY * 0.15;
+    spawnReactionBurst(cx, cy, 10, "34,211,238");
+  }
 }
 
 function reactToIntegrity(events = 0) {
@@ -293,7 +333,7 @@ function reactToFullUpdate() {
   state.universePulse = Math.min(2.2, state.universePulse + 0.25);
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
-  spawnReactionBurst(cx, cy, 42, "255,220,160");
+  spawnReactionBurst(cx, cy, 24, "255,220,160");
   syncControlLabels();
 }
 
@@ -442,10 +482,7 @@ async function runPrimeProtocol() {
   try {
     const data = await apiGet("/resonance/status");
     freqText.textContent = `${data.frequency}Hz`;
-    logEntry(
-      `RSP=${data.radiant_sovereign_presence}, coherence=${data.phase_coherence}, frequency=${data.frequency}`,
-      "PRIME"
-    );
+    logEntry(`RSP=${data.radiant_sovereign_presence}, coherence=${data.phase_coherence}, frequency=${data.frequency}`, "PRIME");
     if (diagContent) {
       diagContent.textContent = `Resonance
 RSP: ${data.radiant_sovereign_presence}
@@ -464,10 +501,7 @@ async function runEngineStatus() {
     reactToMappedVolumes(data.mapped_volumes || 0);
     reactToIntegrity(data.verification_events || 0);
 
-    logEntry(
-      `Engine active=${data.active} mapped_volumes=${data.mapped_volumes} uptime=${data.uptime_seconds}s`,
-      "ENGINE"
-    );
+    logEntry(`Engine active=${data.active} mapped_volumes=${data.mapped_volumes} uptime=${data.uptime_seconds}s`, "ENGINE");
 
     if (diagContent) {
       diagContent.textContent = `Engine
@@ -475,13 +509,6 @@ Active: ${data.active}
 Mapped Volumes: ${data.mapped_volumes}
 Verification Events: ${data.verification_events}
 Uptime: ${data.uptime_seconds}s`;
-    }
-
-    if (archiveContent) {
-      archiveContent.textContent = `Archive State
-Mapped volumes: ${data.mapped_volumes}
-Verification events: ${data.verification_events}
-Origin: ${data.origin}`;
     }
 
     try {
@@ -523,22 +550,11 @@ async function runProcessVolume(volumeId = 2) {
     volumeCount.textContent = `${data.projection.volume} / 200`;
     reactToMappedVolumes(Math.max(state.mappedVolumes, volumeId));
     spawnVolumeCluster(volumeId);
-    spawnReactionBurst(width / 2, height / 2, 24, "34,211,238");
 
     logEntry(
       `Volume ${data.volume_id} mapped. resonance=${data.projection.resonance.toFixed(3)} vector=${data.projection.presence_vector.join(",")}`,
       "ARCHIVE"
     );
-
-    if (archiveContent) {
-      archiveContent.textContent =
-`Processed Volume
-ID: ${data.volume_id}
-Title: ${data.title}
-Resonance: ${data.projection.resonance.toFixed(3)}
-Vector: ${data.projection.presence_vector.join(",")}
-Checksum: ${data.projection.checksum}`;
-    }
 
     try {
       const volumes = await fetchVolumeList();
@@ -563,21 +579,23 @@ async function uploadAllVolumes() {
         text: `Axiomatic content for volume ${i}. The system expands deterministically through structured resonance and logical continuity.`
       });
 
-      volumeCount.textContent = `${i} / 200`;
-      reactToMappedVolumes(i);
-      spawnVolumeCluster(i);
+      if (i % 10 === 0 || i === 200) {
+        volumeCount.textContent = `${i} / 200`;
+        reactToMappedVolumes(i);
 
-      if (archiveContent) {
-        archiveContent.textContent =
+        if (archiveContent) {
+          archiveContent.textContent =
 `Uploading All Archives
 Current Volume: ${i} / 200
 Last Title: ${data.title}
 Resonance: ${data.projection.resonance.toFixed(3)}
 Checksum: ${data.projection.checksum}`;
+        }
+
+        logEntry(`✔ Volume ${i} uploaded`, "ARCHIVE");
       }
 
-      logEntry(`✔ Volume ${i} uploaded`, "ARCHIVE");
-      await new Promise((resolve) => setTimeout(resolve, 80));
+      await new Promise((resolve) => setTimeout(resolve, 120));
     } catch (err) {
       logEntry(`✖ Volume ${i} failed: ${err.message}`, "ERR");
     }
@@ -636,7 +654,7 @@ function handleCommand(raw) {
   if (!command) return;
 
   if (command === "help") {
-    logEntry("Commands: help, health, prime, engine, integrity, process, fullupdate, uploadall, clear, reset, api <url>", "HELP");
+    logEntry("Commands: help, health, prime, engine, integrity, process <n>, fullupdate, uploadall, clear, reset, api <url>", "HELP");
     return;
   }
 
@@ -644,7 +662,6 @@ function handleCommand(raw) {
   if (command === "prime" || command === "resonance") return runPrimeProtocol();
   if (command === "engine") return runEngineStatus();
   if (command === "integrity") return runIntegrityCheck();
-  if (command === "process") return runProcessVolume(2);
   if (command === "fullupdate") return runFullUpdate();
   if (command === "uploadall") return uploadAllVolumes();
 
@@ -652,6 +669,8 @@ function handleCommand(raw) {
     const id = Number(command.split(" ")[1]);
     if (Number.isInteger(id) && id >= 1 && id <= 200) return runProcessVolume(id);
   }
+
+  if (command === "process") return runProcessVolume(2);
 
   if (command === "clear") {
     systemLog.innerHTML = "";
@@ -666,7 +685,7 @@ function handleCommand(raw) {
     state.camera.dragY = 0;
     state.autoRotate = false;
     state.showLabels = true;
-    state.glowStrength = 1;
+    state.glowStrength = 0.8;
     state.orbitStretch = 0.36;
     state.rotationSpeedFactor = 1;
 
@@ -679,12 +698,12 @@ function handleCommand(raw) {
 
     if (zoomSlider) zoomSlider.value = "1.00";
     if (rotationSpeedSlider) rotationSpeedSlider.value = "1.00";
-    if (starCountSlider) starCountSlider.value = "1400";
-    if (particleCountSlider) particleCountSlider.value = "260";
-    if (glowSlider) glowSlider.value = "1.00";
+    if (starCountSlider) starCountSlider.value = "600";
+    if (particleCountSlider) particleCountSlider.value = "120";
+    if (glowSlider) glowSlider.value = "0.80";
     if (orbitStretchSlider) orbitStretchSlider.value = "0.36";
 
-    initScene(1400, 260);
+    initScene(600, 120);
     syncControlLabels();
     applyModeVisuals();
     if (archiveContent) archiveContent.textContent = "No archive action yet.";
@@ -721,6 +740,13 @@ async function runAiPrompt(raw) {
   if (q.includes("home")) {
     showHome();
     aiMessage("Opening the home interface.");
+    return;
+  }
+
+  if (q.includes("architecture") || q.includes("master architecture") || q.includes("v200")) {
+    showApp("architecture");
+    aiMessage("Opening the master architecture view.");
+    runMasterFIC();
     return;
   }
 
@@ -813,7 +839,130 @@ async function runAiPrompt(raw) {
     return;
   }
 
-  aiMessage("I can route you to: home, universe, archive, diagnostics, terminal, process volume 2 or any volume number, upload all 200 volumes, resonance, engine, integrity, or full update.");
+  aiMessage("I can route you to: home, universe, archive, diagnostics, terminal, architecture, process any volume number, upload all 200 volumes, resonance, engine, integrity, or full update.");
+}
+
+/* ===========================
+   ARCHITECTURE VIEW
+=========================== */
+function drawTorusKernel() {
+  if (!isVisible(architectureView) || !torusCanvas || !torusCtx) return;
+
+  resizeInnerCanvas(torusCanvas);
+
+  const w = torusCanvas.getBoundingClientRect().width;
+  const h = torusCanvas.getBoundingClientRect().height;
+
+  torusCtx.fillStyle = "rgba(5, 5, 5, 0.3)";
+  torusCtx.fillRect(0, 0, w, h);
+
+  const centerX = w / 2;
+  const centerY = h / 2;
+  const R = 70;
+  const r = 35;
+
+  for (let i = 0; i < 20; i += 1) {
+    const theta = (i / 20) * Math.PI * 2 + torusAngle;
+    torusCtx.beginPath();
+
+    for (let j = 0; j <= 30; j += 1) {
+      const phi = (j / 30) * Math.PI * 2;
+      const x = (R + r * Math.cos(phi)) * Math.cos(theta);
+      const y = (R + r * Math.cos(phi)) * Math.sin(theta);
+      const z = r * Math.sin(phi);
+      const scale = 180 / (180 + z);
+      const px = centerX + x * scale;
+      const py = centerY + y * scale;
+
+      if (j === 0) torusCtx.moveTo(px, py);
+      else torusCtx.lineTo(px, py);
+    }
+
+    torusCtx.strokeStyle = `rgba(0, 255, 65, ${0.2 + Math.sin(torusAngle) * 0.15})`;
+    torusCtx.stroke();
+  }
+
+  torusAngle += 0.015;
+}
+
+function drawFrequencyMonitor() {
+  if (!isVisible(architectureView) || !freqCanvas || !freqCtx) return;
+
+  resizeInnerCanvas(freqCanvas);
+
+  const w = freqCanvas.getBoundingClientRect().width;
+  const h = freqCanvas.getBoundingClientRect().height;
+  const midY = h / 2;
+
+  freqCtx.clearRect(0, 0, w, h);
+  freqCtx.beginPath();
+  freqCtx.strokeStyle = "#c5a059";
+  freqCtx.lineWidth = 2;
+
+  for (let x = 0; x < w; x += 1) {
+    const y = midY
+      + Math.sin(x * 0.02 + freqOffset) * 15
+      + Math.sin(x * 0.01 + freqOffset * 0.5) * 10;
+
+    if (x === 0) freqCtx.moveTo(x, y);
+    else freqCtx.lineTo(x, y);
+  }
+
+  freqCtx.stroke();
+  freqOffset -= 0.06;
+}
+
+function runMasterFIC() {
+  if (ficStarted || !sectorGrid || !progressBar) return;
+  ficStarted = true;
+
+  const sectors = [
+    "S01: KERNEL",
+    "S02: LOGIC",
+    "S03: FREQ",
+    "S04: SOLAR",
+    "S05: FINALITY"
+  ];
+
+  sectorGrid.innerHTML = "";
+
+  sectors.forEach((s, i) => {
+    const d = document.createElement("div");
+    d.className = "sector-item";
+    d.id = `sec-${i}`;
+    d.innerHTML = `${s} <span class="v">0%</span>`;
+    sectorGrid.appendChild(d);
+  });
+
+  let current = 0;
+
+  const scan = setInterval(() => {
+    if (current >= sectors.length) {
+      clearInterval(scan);
+      if (logicLog) {
+        logicLog.textContent += "\n[OK] MASTER INDEX SYNC COMPLETE.\n[OK] FIC PASSED ACROSS ALL SECTORS.";
+        logicLog.scrollTop = logicLog.scrollHeight;
+      }
+      return;
+    }
+
+    let p = 0;
+    const sub = setInterval(() => {
+      p += 10;
+
+      const target = document.querySelector(`#sec-${current} .v`);
+      if (target) target.innerText = `${p}%`;
+
+      progressBar.style.width = `${(current / sectors.length) * 100 + (p / sectors.length)}%`;
+
+      if (p >= 100) {
+        clearInterval(sub);
+        const row = document.getElementById(`sec-${current}`);
+        if (row) row.style.color = "#fff";
+        current += 1;
+      }
+    }, 80);
+  }, 1000);
 }
 
 /* ===========================
@@ -919,7 +1068,7 @@ function drawStars(time) {
     const alpha = Math.max(0.08, Math.min(0.95, p.scale * 0.02));
     const flicker = (Math.sin(p.phase) + 1) / 2;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, Math.min(5, p.radius), 0, Math.PI * 2);
+    ctx.arc(p.x, p.y, Math.min(4, p.radius), 0, Math.PI * 2);
     ctx.fillStyle = `rgba(0, 255, 204, ${alpha * flicker})`;
     ctx.fill();
   }
@@ -960,7 +1109,7 @@ function drawNodeClusters() {
     ctx.globalAlpha = 1;
 
     ctx.beginPath();
-    ctx.arc(x, y, cluster.size + 8, 0, Math.PI * 2);
+    ctx.arc(x, y, cluster.size + 6, 0, Math.PI * 2);
     ctx.strokeStyle = `${cluster.color}55`;
     ctx.lineWidth = 1;
     ctx.stroke();
@@ -1038,6 +1187,8 @@ function render(now) {
   drawNodeClusters();
   drawPlanets();
   drawReactionBursts();
+  drawTorusKernel();
+  drawFrequencyMonitor();
 
   requestAnimationFrame(render);
 }
@@ -1056,12 +1207,12 @@ rotationSpeedSlider?.addEventListener("input", (e) => {
 });
 
 starCountSlider?.addEventListener("input", (e) => {
-  initScene(Number(e.target.value), state.particles.length || 260);
+  initScene(Number(e.target.value), state.particles.length || 120);
   syncControlLabels();
 });
 
 particleCountSlider?.addEventListener("input", (e) => {
-  initScene(state.stars.length || 1400, Number(e.target.value));
+  initScene(state.stars.length || 600, Number(e.target.value));
   syncControlLabels();
 });
 
@@ -1106,16 +1257,16 @@ zoomOutBtn?.addEventListener("click", () => {
 });
 
 boostStarsBtn?.addEventListener("click", () => {
-  const next = Math.min(4000, state.stars.length + 300);
+  const next = Math.min(2000, state.stars.length + 150);
   if (starCountSlider) starCountSlider.value = String(next);
-  initScene(next, state.particles.length || 260);
+  initScene(next, state.particles.length || 120);
   syncControlLabels();
 });
 
 boostParticlesBtn?.addEventListener("click", () => {
-  const next = Math.min(1200, state.particles.length + 80);
+  const next = Math.min(600, state.particles.length + 40);
   if (particleCountSlider) particleCountSlider.value = String(next);
-  initScene(state.stars.length || 1400, next);
+  initScene(state.stars.length || 600, next);
   syncControlLabels();
 });
 
@@ -1201,6 +1352,10 @@ homeCards.forEach((card) => {
       await runHealthCheck();
       await runEngineStatus();
     }
+
+    if (view === "architecture") {
+      runMasterFIC();
+    }
   });
 });
 
@@ -1230,6 +1385,10 @@ navItems.forEach((button) => {
     if (module === "diagnostics") {
       await runHealthCheck();
       await runEngineStatus();
+    }
+
+    if (module === "architecture") {
+      runMasterFIC();
     }
   });
 });
@@ -1289,7 +1448,7 @@ setInterval(() => {
 }, 3000);
 
 resizeCanvas();
-initScene();
+initScene(600, 120);
 syncControlLabels();
 applyModeVisuals();
 runHealthCheck();
