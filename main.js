@@ -165,6 +165,7 @@ function showApp(view = "universe") {
 
   if (view === "archive") {
     archiveView.classList.remove("hidden");
+    terminalView.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="archive"]')?.classList.add("active");
   } else if (view === "diagnostics") {
     diagnosticsView.classList.remove("hidden");
@@ -261,8 +262,8 @@ function spawnVolumeCluster(volumeNumber = 1) {
 
 function reactToMappedVolumes(count) {
   state.mappedVolumes = count;
-  state.universePulse = Math.min(1.8, 1 + count * 0.08);
-  state.resonanceBoost = Math.min(2.5, 1 + count * 0.05);
+  state.universePulse = Math.min(1.8, 1 + count * 0.02);
+  state.resonanceBoost = Math.min(2.5, 1 + count * 0.01);
 
   while (state.nodeClusters.length < count) {
     spawnVolumeCluster(state.nodeClusters.length + 1);
@@ -274,7 +275,7 @@ function reactToMappedVolumes(count) {
 
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
-  spawnReactionBurst(cx, cy, 10 + count * 2, "34,211,238");
+  spawnReactionBurst(cx, cy, Math.min(20, 8 + Math.floor(count / 10)), "34,211,238");
 }
 
 function reactToIntegrity(events = 0) {
@@ -282,7 +283,7 @@ function reactToIntegrity(events = 0) {
   state.glowStrength = Math.min(2.5, 1 + events * 0.03);
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
-  spawnReactionBurst(cx, cy, 16, "245,158,11");
+  spawnReactionBurst(cx, cy, 12, "245,158,11");
 }
 
 function reactToFullUpdate() {
@@ -300,6 +301,7 @@ function applyModeVisuals() {
   if (!statusText) return;
   statusText.textContent = "UNLOCKED";
   statusText.style.color = "#22c55e";
+  if (headerRealityState) headerRealityState.textContent = "Sovereign Constant";
 }
 
 /* ===========================
@@ -336,6 +338,7 @@ async function runHealthCheck() {
   backendStatus.textContent = "PINGING";
   solverStatus.textContent = "CHECKING";
   headerBackendState.textContent = "Connecting";
+  headerBackendState.className = "v";
 
   try {
     const data = await apiGet("/health");
@@ -434,18 +437,18 @@ Events: ${data.verification_events}`;
   }
 }
 
-async function runProcessVolume() {
+async function runProcessVolume(volumeId = 2) {
   try {
-    logEntry("Processing Volume 2...", "REQ");
+    logEntry(`Processing Volume ${volumeId}...`, "REQ");
     const data = await apiPost("/engine/process", {
-      volume_id: 2,
-      title: "Axioms of the Eternal Origin",
-      text: "The manifold operates on a deterministic geometric scale where resonance is a function of logical consistency and prime frequency alignment."
+      volume_id: volumeId,
+      title: `Volume ${volumeId}`,
+      text: `Axiomatic content for volume ${volumeId}. The system expands deterministically through structured resonance and logical continuity.`
     });
 
     volumeCount.textContent = `${data.projection.volume} / 200`;
-    reactToMappedVolumes(Math.max(state.mappedVolumes, data.projection.volume || 1));
-    spawnVolumeCluster(data.projection.volume || 1);
+    reactToMappedVolumes(Math.max(state.mappedVolumes, volumeId));
+    spawnVolumeCluster(volumeId);
     spawnReactionBurst(width / 2, height / 2, 24, "34,211,238");
 
     logEntry(
@@ -463,6 +466,42 @@ Checksum: ${data.projection.checksum}`;
   } catch (error) {
     logEntry(`Process failed: ${error.message}`, "ERR");
   }
+}
+
+async function uploadAllVolumes() {
+  showApp("archive");
+  aiMessage("Uploading all 200 volumes now...");
+  logEntry("Starting full archive upload (200 volumes)...", "UPLOAD");
+
+  for (let i = 1; i <= 200; i += 1) {
+    try {
+      const data = await apiPost("/engine/process", {
+        volume_id: i,
+        title: `Volume ${i}`,
+        text: `Axiomatic content for volume ${i}. The system expands deterministically through structured resonance and logical continuity.`
+      });
+
+      volumeCount.textContent = `${i} / 200`;
+      reactToMappedVolumes(i);
+      spawnVolumeCluster(i);
+
+      archiveContent.textContent =
+`Uploading All Archives
+Current Volume: ${i} / 200
+Last Title: ${data.title}
+Resonance: ${data.projection.resonance.toFixed(3)}
+Checksum: ${data.projection.checksum}`;
+
+      logEntry(`✔ Volume ${i} uploaded`, "ARCHIVE");
+
+      await new Promise((resolve) => setTimeout(resolve, 80));
+    } catch (err) {
+      logEntry(`✖ Volume ${i} failed: ${err.message}`, "ERR");
+    }
+  }
+
+  logEntry("✅ ALL 200 VOLUMES UPLOADED", "DONE");
+  aiMessage("All 200 volumes were processed.");
 }
 
 async function runFullUpdate() {
@@ -507,7 +546,7 @@ function handleCommand(raw) {
   if (!command) return;
 
   if (command === "help") {
-    logEntry("Commands: help, health, prime, engine, integrity, process, fullupdate, clear, reset, api <url>", "HELP");
+    logEntry("Commands: help, health, prime, engine, integrity, process, fullupdate, uploadall, clear, reset, api <url>", "HELP");
     return;
   }
 
@@ -515,8 +554,9 @@ function handleCommand(raw) {
   if (command === "prime" || command === "resonance") return runPrimeProtocol();
   if (command === "engine") return runEngineStatus();
   if (command === "integrity") return runIntegrityCheck();
-  if (command === "process") return runProcessVolume();
+  if (command === "process") return runProcessVolume(2);
   if (command === "fullupdate") return runFullUpdate();
+  if (command === "uploadall") return uploadAllVolumes();
 
   if (command === "clear") {
     systemLog.innerHTML = "";
@@ -552,6 +592,8 @@ function handleCommand(raw) {
     initScene(1400, 260);
     syncControlLabels();
     applyModeVisuals();
+    archiveContent.textContent = "No archive action yet.";
+    diagContent.textContent = "No diagnostic action yet.";
     logEntry("Universe reset.", "SYS");
     return;
   }
@@ -627,10 +669,15 @@ async function runAiPrompt(raw) {
     return;
   }
 
+  if (q.includes("upload all") || q.includes("load all volumes") || q.includes("200 volumes") || q.includes("upload 200")) {
+    await uploadAllVolumes();
+    return;
+  }
+
   if (q.includes("process") || q.includes("volume 2") || q.includes("map volume")) {
     showApp("archive");
     aiMessage("Processing Volume 2.");
-    await runProcessVolume();
+    await runProcessVolume(2);
     return;
   }
 
@@ -648,9 +695,7 @@ async function runAiPrompt(raw) {
     return;
   }
 
-  aiMessage(
-    "I can route you to: universe, archive, diagnostics, terminal, process volume 2, resonance, engine, integrity, or full update."
-  );
+  aiMessage("I can route you to: home, universe, archive, diagnostics, terminal, process volume 2, upload all 200 volumes, resonance, engine, integrity, or full update.");
 }
 
 /* ===========================
@@ -1035,7 +1080,7 @@ navItems.forEach((button) => {
 
     showApp(module);
 
-    if (module === "archive") await runProcessVolume();
+    if (module === "archive") await runProcessVolume(2);
     if (module === "diagnostics") {
       await runHealthCheck();
       await runEngineStatus();
