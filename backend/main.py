@@ -96,6 +96,12 @@ class SymbolicLogicEngine:
         prohibited_terms = ["speculation", "prophecy", "luck", "random"]
         return not any(term in text.lower() for term in prohibited_terms)
 
+@app.post("/engine/full-update")
+def full_update(payload: FullUpdateRequest):
+    return apply_full_system_update(
+        enforce_legacy_integrity=payload.enforce_legacy_integrity,
+        apply_system_update=payload.apply_system_update,
+    )
 
 class EternalEngine:
     def __init__(self):
