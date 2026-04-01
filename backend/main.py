@@ -288,7 +288,7 @@ def list_volumes():
     }
 
 
-@app.post("/engine/bootstrap-seed")
+@app.get("/engine/bootstrap-seed")
 def bootstrap_seed():
     loaded = engine.seed_volumes()
     return {
