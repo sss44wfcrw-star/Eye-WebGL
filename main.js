@@ -396,6 +396,23 @@ function renderVolumeList(volumes = []) {
     return;
   }
 
+  volumes.forEach((item) => {
+    const id = item.volume_id;
+
+    const btn = document.createElement("button");
+    btn.className = "volume-item";
+    btn.textContent = `${id}. ${item.title || `Volume ${id}`}`;
+
+    btn.addEventListener("click", async () => {
+      document.querySelectorAll(".volume-item").forEach((el) => el.classList.remove("active"));
+      btn.classList.add("active");
+      await loadVolumeDetail(id);
+    });
+
+    volumeList.appendChild(btn);
+  });
+}
+
   volumes.forEach((id) => {
     const btn = document.createElement("button");
     btn.className = "volume-item";
@@ -417,18 +434,17 @@ async function loadVolumeDetail(volumeId) {
     archiveContent.textContent =
 `Volume ID: ${data.volume_id}
 Title: ${data.title}
+Specs: ${data.specs || "[none]"}
+Source: ${data.source || "unknown"}
 Origin: ${data.projection.origin}
 Resonance: ${Number(data.projection.resonance).toFixed(3)}
 Presence Vector: ${data.projection.presence_vector.join(", ")}
 Checksum: ${data.projection.checksum}
 
-Raw Projection:
-${JSON.stringify(data.projection, null, 2)}`;
-
-    logEntry(`Loaded Volume ${volumeId}.`, "ARCHIVE");
+Full Volume Text:
+${data.text || "[No stored text found]"}`;
   } catch (error) {
     archiveContent.textContent = `Failed to load Volume ${volumeId}: ${error.message}`;
-    logEntry(`Load volume failed: ${error.message}`, "ERR");
   }
 }
 
