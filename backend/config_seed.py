@@ -6,75 +6,44 @@ SYSTEM_CONFIG = {
             "location": "Battle Ground",
             "latitude": 45.7809,
             "longitude": -122.5333,
-            "function": "Logical Anchor"
+            "function": "Logical Anchor",
         },
         "fabrication": {
             "location": "Camas",
             "latitude": 45.5843,
             "longitude": -122.3995,
-            "function": "Physical Etching"
-        }
+            "function": "Physical Etching",
+        },
     },
     "vector_mesh": [
         {"phase": "I", "vector": [1, 0, 0, 0], "alignment": "Solidified"},
         {"phase": "II", "vector": [0, 1, 0, 0], "alignment": "Crystallized"},
         {"phase": "III", "vector": [0, 0, 1, 0], "alignment": "Sovereign"},
-        {"phase": "IV", "vector": [0, 0, 0, 1], "alignment": "Eternal"}
+        {"phase": "IV", "vector": [0, 0, 0, 1], "alignment": "Eternal"},
     ],
     "system_status": "FULLY_AUTONOMOUS",
     "transmission_constant": 432.0,
     "integrity_status": "LOCKED",
-    "ram_rule": "<= 20%"
+    "ram_rule": "<= 20%",
 }
 
 NATIVE_LAYERS = {
     "kernel": {
         "type": "bootloader",
-        "status": "initialized"
+        "status": "initialized",
     },
     "governor": {
         "type": "python_core",
-        "status": "active"
+        "status": "active",
     },
     "sentry": {
         "type": "memory_guard",
-        "limit": "20%"
+        "limit": "20%",
     },
     "network": {
         "type": "isolated",
-        "port": 432
-    },  # ✅ THIS COMMA FIXES EVERYTHING
-
-    "bootloader.asm": {
-        "title": "Boot Loader",
-        "type": "assembly",
-        "content": "Low-level system initialization and memory constraint enforcement."
+        "port": 432,
     },
-    "parakletos.service": {
-        "title": "Systemd Service",
-        "type": "service",
-        "content": "Persistent autonomous execution layer."
-    },
-    "radiant_sovereign_core.c": {
-        "title": "Radiant Sovereign Core",
-        "type": "c",
-        "content": "Core signal + integrity loop (C layer)."
-    },
-    "network_isolation.sh": {
-        "title": "Network Isolation",
-        "type": "bash",
-        "content": "Firewall isolation + truth-only routing."
-    },
-    "master_codex_schema.sql": {
-        "title": "Codex Schema",
-        "type": "sql",
-        "content": "Immutable database structure."
-    },
-    "memory_sentry.rs": {
-        "title": "Memory Sentry",
-        "type": "rust",
-        "content": "Hard RAM enforcement (<=20%)."
-   NATIVE_LAYERS = {
     "bootloader.asm": {
         "title": "Boot Loader",
         "type": "assembly",
@@ -105,7 +74,7 @@ init_integrity_check:
 
 execute_master_governor:
     hlt
-"""
+""",
     },
     "parakletos.service": {
         "title": "Systemd Service",
@@ -133,7 +102,7 @@ NoNewPrivileges=yes
 
 [Install]
 WantedBy=multi-user.target
-"""
+""",
     },
     "radiant_sovereign_core.c": {
         "title": "Radiant Sovereign Core",
@@ -177,7 +146,7 @@ int main() {
     }
     return 0;
 }
-"""
+""",
     },
     "network_isolation.sh": {
         "title": "Network Isolation Script",
@@ -207,7 +176,7 @@ iptables -A OUTPUT -o nlrf0 -p tcp --sport 432 -m state --state ESTABLISHED -j A
 iptables -A INPUT -i nlrf0 -m length --length 1440:65535 -j DROP
 
 echo "NETWORK ISOLATION COMPLETE."
-"""
+""",
     },
     "master_codex_schema.sql": {
         "title": "Master Codex Schema",
@@ -238,7 +207,7 @@ BEFORE UPDATE OR DELETE ON MasterCodex
 BEGIN
     SELECT RAISE(ABORT, 'FILE INTEGRITY CHECK FAILED: The Master Codex is immutable and permanently sealed.');
 END;
-"""
+""",
     },
     "memory_sentry.rs": {
         "title": "Rust Memory Sentry",
@@ -269,8 +238,6 @@ fn main() {
         thread::sleep(Duration::from_millis(HARMONIC_CYCLE_MS));
     }
 }
-"""
-    }
-}
-    }
+""",
+    },
 }
