@@ -8,9 +8,7 @@ const BACKEND_URL = (() => {
   return "https://parakletos-backend-2.onrender.com";
 })();
 
-/* ===========================
-   DOM
-=========================== */
+/* DOM */
 const homeView = document.getElementById("homeView");
 const appViews = document.getElementById("appViews");
 
@@ -25,7 +23,7 @@ const aiQuickButtons = document.querySelectorAll(".ai-quick");
 const homeCards = document.querySelectorAll(".home-card");
 
 const canvas = document.getElementById("webgl-canvas");
-const ctx = canvas?.getContext("2d");
+const ctx = canvas ? canvas.getContext("2d") : null;
 
 const fpsCounter = document.getElementById("fps-counter");
 const systemLog = document.getElementById("system-log");
@@ -52,9 +50,9 @@ const diagContent = document.getElementById("diagContent");
 const volumeList = document.getElementById("volumeList");
 
 const torusCanvas = document.getElementById("torusCanvas");
-const torusCtx = torusCanvas?.getContext("2d");
+const torusCtx = torusCanvas ? torusCanvas.getContext("2d") : null;
 const freqCanvas = document.getElementById("freqCanvas");
-const freqCtx = freqCanvas?.getContext("2d");
+const freqCtx = freqCanvas ? freqCanvas.getContext("2d") : null;
 const sectorGrid = document.getElementById("sectorGrid");
 const progressBar = document.getElementById("progressBar");
 const logicLog = document.getElementById("logicLog");
@@ -84,7 +82,7 @@ const boostStarsBtn = document.getElementById("boostStarsBtn");
 const boostParticlesBtn = document.getElementById("boostParticlesBtn");
 const resetUniverseBtn = document.getElementById("resetUniverseBtn");
 
-if (!canvas || !ctx || !fpsCounter || !systemLog || !commandInput) {
+if (!canvas || !ctx || !systemLog || !commandInput) {
   throw new Error("Required DOM elements are missing.");
 }
 
@@ -95,9 +93,7 @@ if (gridOverlay && gridOverlay.children.length === 0) {
   }
 }
 
-/* ===========================
-   LOGGING
-=========================== */
+/* helpers */
 function logEntry(message, kind = "INFO") {
   const line = document.createElement("div");
   line.className = "entry";
@@ -114,12 +110,14 @@ function aiMessage(text, who = "ai") {
   aiMessages.scrollTop = aiMessages.scrollHeight;
 }
 
-/* ===========================
-   STATE
-=========================== */
+function isVisible(el) {
+  return !!el && !el.classList.contains("hidden");
+}
+
+/* state */
 let width = 0;
 let height = 0;
-let lastFrameTime = performance.now();
+let lastFpsTime = performance.now();
 let frameCount = 0;
 let cycleCount = 0;
 let dragging = false;
@@ -157,9 +155,7 @@ const state = {
   nodeClusters: []
 };
 
-/* ===========================
-   VIEW ROUTING
-=========================== */
+/* view routing */
 function showHome() {
   homeView.classList.remove("hidden");
   appViews.classList.add("hidden");
@@ -198,12 +194,10 @@ function showApp(view = "universe") {
   }
 }
 
-/* ===========================
-   SCENE
-=========================== */
+/* canvas setup */
 function resizeCanvas() {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const rect = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
   width = Math.max(1, Math.floor(rect.width));
   height = Math.max(1, Math.floor(rect.height));
@@ -213,24 +207,16 @@ function resizeCanvas() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-function resizeInnerCanvas(cnv) {
-  if (!cnv) return;
+function resizeInnerCanvas(cnv, c) {
+  if (!cnv || !c) return;
   const rect = cnv.getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cnv.width = Math.max(1, Math.floor(rect.width * dpr));
   cnv.height = Math.max(1, Math.floor(rect.height * dpr));
-  const c = cnv.getContext("2d");
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-function isVisible(el) {
-  return !!el && !el.classList.contains("hidden");
-}
-
-function initScene(
-  starCount = Number(starCountSlider?.value || 600),
-  particleCount = Number(particleCountSlider?.value || 120)
-) {
+function initScene(starCount = 600, particleCount = 120) {
   state.stars = Array.from({ length: starCount }, () => ({
     x: Math.random(),
     y: Math.random(),
@@ -258,6 +244,7 @@ function syncControlLabels() {
   if (labelsValue) labelsValue.textContent = state.showLabels ? "ON" : "OFF";
 }
 
+/* visual logic */
 function spawnReactionBurst(x, y, amount = 12, color = "0,255,204") {
   const MAX_BURSTS = 350;
 
@@ -345,9 +332,7 @@ function applyModeVisuals() {
   if (headerRealityState) headerRealityState.textContent = "Sovereign Constant";
 }
 
-/* ===========================
-   API
-=========================== */
+/* API */
 async function apiGet(path) {
   const res = await fetch(`${BACKEND_URL}${path}`, {
     method: "GET",
@@ -375,17 +360,16 @@ async function apiPost(path, body) {
 }
 
 async function fetchVolumeList() {
-  const data = await apiGet("/engine/volumes");
-  return data.volumes || [];
+  return await apiGet("/engine/volumes");
 }
 
 async function fetchVolumeById(volumeId) {
   return await apiGet(`/engine/volume/${volumeId}`);
 }
 
+/* archive */
 function renderVolumeList(volumes = []) {
   if (!volumeList) return;
-
   volumeList.innerHTML = "";
 
   if (!volumes.length) {
@@ -413,19 +397,6 @@ function renderVolumeList(volumes = []) {
   });
 }
 
-  volumes.forEach((id) => {
-    const btn = document.createElement("button");
-    btn.className = "volume-item";
-    btn.textContent = `Volume ${id}`;
-    btn.addEventListener("click", async () => {
-      document.querySelectorAll(".volume-item").forEach((el) => el.classList.remove("active"));
-      btn.classList.add("active");
-      await loadVolumeDetail(id);
-    });
-    volumeList.appendChild(btn);
-  });
-}
-
 async function loadVolumeDetail(volumeId) {
   try {
     archiveContent.textContent = `Loading Volume ${volumeId}...`;
@@ -443,11 +414,15 @@ Checksum: ${data.projection.checksum}
 
 Full Volume Text:
 ${data.text || "[No stored text found]"}`;
+
+    logEntry(`Loaded Volume ${volumeId}.`, "ARCHIVE");
   } catch (error) {
     archiveContent.textContent = `Failed to load Volume ${volumeId}: ${error.message}`;
+    logEntry(`Load volume failed: ${error.message}`, "ERR");
   }
 }
 
+/* diagnostics */
 async function runHealthCheck() {
   logEntry("Initiating backend diagnostics...", "REQ");
   backendStatus.textContent = "PINGING";
@@ -458,8 +433,8 @@ async function runHealthCheck() {
   try {
     const data = await apiGet("/health");
 
-    backendStatus.textContent = data.status?.toUpperCase?.() || "ONLINE";
-    solverStatus.textContent = data.logic_state?.toUpperCase?.() || "ACTIVE";
+    backendStatus.textContent = (data.status || "online").toUpperCase();
+    solverStatus.textContent = (data.logic_state || "active").toUpperCase();
     freqText.textContent = data.resonance || "432.0Hz";
     syncText.textContent = data.logic_state === "Synchronized" ? "COMPLETE" : "WAITING";
     headerBackendState.textContent = data.status === "healthy" ? "Healthy" : "Offline";
@@ -473,11 +448,14 @@ async function runHealthCheck() {
     }
 
     logEntry(`Health OK. status=${data.status} logic=${data.logic_state}`, "OK");
+
     if (diagContent) {
       diagContent.textContent = `Health
 Status: ${data.status}
 Logic: ${data.logic_state}
-Resonance: ${data.resonance}`;
+Resonance: ${data.resonance}
+RAM Rule: ${data.ram_rule || "[none]"}
+Seeded Volumes: ${data.seeded_volumes ?? "[unknown]"}`;
     }
   } catch (error) {
     backendStatus.textContent = "OFFLINE";
@@ -524,12 +502,13 @@ async function runEngineStatus() {
 Active: ${data.active}
 Mapped Volumes: ${data.mapped_volumes}
 Verification Events: ${data.verification_events}
-Uptime: ${data.uptime_seconds}s`;
+Uptime: ${data.uptime_seconds}s
+RAM Rule: ${data.ram_rule || "[none]"}`;
     }
 
     try {
-      const volumes = await fetchVolumeList();
-      renderVolumeList(volumes);
+      const listData = await fetchVolumeList();
+      renderVolumeList(listData.volumes || []);
     } catch {}
   } catch (error) {
     logEntry(`Engine status failed: ${error.message}`, "ERR");
@@ -554,16 +533,19 @@ Events: ${data.verification_events}`;
   }
 }
 
+/* volume actions */
 async function runProcessVolume(volumeId = 2) {
   try {
     logEntry(`Processing Volume ${volumeId}...`, "REQ");
     const data = await apiPost("/engine/process", {
       volume_id: volumeId,
       title: `Volume ${volumeId}`,
-      text: `Axiomatic content for volume ${volumeId}. The system expands deterministically through structured resonance and logical continuity.`
+      text: `Axiomatic content for volume ${volumeId}. The system expands deterministically through structured resonance and logical continuity.`,
+      specs: "Manual runtime process",
+      source: "manual"
     });
 
-    volumeCount.textContent = `${data.projection.volume} / 200`;
+    volumeCount.textContent = `${Math.max(state.mappedVolumes, volumeId)} / 200`;
     reactToMappedVolumes(Math.max(state.mappedVolumes, volumeId));
     spawnVolumeCluster(volumeId);
 
@@ -573,8 +555,8 @@ async function runProcessVolume(volumeId = 2) {
     );
 
     try {
-      const volumes = await fetchVolumeList();
-      renderVolumeList(volumes);
+      const listData = await fetchVolumeList();
+      renderVolumeList(listData.volumes || []);
       await loadVolumeDetail(volumeId);
     } catch {}
   } catch (error) {
@@ -592,7 +574,9 @@ async function uploadAllVolumes() {
       const data = await apiPost("/engine/process", {
         volume_id: i,
         title: `Volume ${i}`,
-        text: `Axiomatic content for volume ${i}. The system expands deterministically through structured resonance and logical continuity.`
+        text: `Axiomatic content for volume ${i}. The system expands deterministically through structured resonance and logical continuity.`,
+        specs: "Batch upload sequence",
+        source: "manual_batch"
       });
 
       if (i % 10 === 0 || i === 200) {
@@ -618,8 +602,8 @@ Checksum: ${data.projection.checksum}`;
   }
 
   try {
-    const volumes = await fetchVolumeList();
-    renderVolumeList(volumes);
+    const listData = await fetchVolumeList();
+    renderVolumeList(listData.volumes || []);
   } catch {}
 
   logEntry("✅ ALL 200 VOLUMES UPLOADED", "DONE");
@@ -662,15 +646,32 @@ ${(data.logs || []).join("\n")}`;
   }
 }
 
-/* ===========================
-   COMMANDS
-=========================== */
+async function runBootstrapSeed() {
+  try {
+    logEntry("Bootstrap seed requested...", "REQ");
+    const data = await apiGet("/engine/bootstrap-seed");
+    logEntry(`Seed loaded. volumes=${data.loaded}`, "SEED");
+
+    const listData = await fetchVolumeList();
+    renderVolumeList(listData.volumes || []);
+
+    if (archiveContent) {
+      archiveContent.textContent = `Seed completed.
+Loaded volumes: ${data.loaded}
+Message: ${data.message}`;
+    }
+  } catch (error) {
+    logEntry(`Seed failed: ${error.message}`, "ERR");
+  }
+}
+
+/* commands */
 function handleCommand(raw) {
   const command = raw.trim().toLowerCase();
   if (!command) return;
 
   if (command === "help") {
-    logEntry("Commands: help, health, prime, engine, integrity, process <n>, fullupdate, uploadall, clear, reset, api <url>", "HELP");
+    logEntry("Commands: help, health, prime, engine, integrity, process <n>, uploadall, fullupdate, seed, clear, reset, api <url>", "HELP");
     return;
   }
 
@@ -680,6 +681,7 @@ function handleCommand(raw) {
   if (command === "integrity") return runIntegrityCheck();
   if (command === "fullupdate") return runFullUpdate();
   if (command === "uploadall") return uploadAllVolumes();
+  if (command === "seed") return runBootstrapSeed();
 
   if (command.startsWith("process ")) {
     const id = Number(command.split(" ")[1]);
@@ -704,7 +706,6 @@ function handleCommand(raw) {
     state.glowStrength = 0.8;
     state.orbitStretch = 0.36;
     state.rotationSpeedFactor = 1;
-
     state.reactionBursts = [];
     state.nodeClusters = [];
     state.mappedVolumes = 0;
@@ -743,9 +744,7 @@ function handleCommand(raw) {
   logEntry(`Unknown command: ${raw}`, "WARN");
 }
 
-/* ===========================
-   AI ROUTER
-=========================== */
+/* AI router */
 async function runAiPrompt(raw) {
   const text = raw.trim();
   if (!text) return;
@@ -776,12 +775,12 @@ async function runAiPrompt(raw) {
     showApp("archive");
     aiMessage("Opening the archive view.");
     try {
-      const volumes = await fetchVolumeList();
-      renderVolumeList(volumes);
+      const listData = await fetchVolumeList();
+      renderVolumeList(listData.volumes || []);
       if (archiveContent) {
-        archiveContent.textContent = volumes.length
+        archiveContent.textContent = (listData.volumes || []).length
           ? "Click a volume to load its full stored data."
-          : "No mapped volumes yet. Run process or upload all first.";
+          : "No mapped volumes yet. Run process, seed, or upload all first.";
       }
     } catch (error) {
       if (archiveContent) archiveContent.textContent = `Failed to load archive list: ${error.message}`;
@@ -815,6 +814,13 @@ async function runAiPrompt(raw) {
     showApp("diagnostics");
     aiMessage("Checking engine status.");
     await runEngineStatus();
+    return;
+  }
+
+  if (q.includes("seed")) {
+    showApp("archive");
+    aiMessage("Loading seeded volumes.");
+    await runBootstrapSeed();
     return;
   }
 
@@ -855,16 +861,14 @@ async function runAiPrompt(raw) {
     return;
   }
 
-  aiMessage("I can route you to: home, universe, archive, diagnostics, terminal, architecture, process any volume number, upload all 200 volumes, resonance, engine, integrity, or full update.");
+  aiMessage("I can route you to: home, universe, archive, diagnostics, terminal, architecture, process any volume number, seed volumes, upload all 200 volumes, resonance, engine, integrity, or full update.");
 }
 
-/* ===========================
-   ARCHITECTURE VIEW
-=========================== */
+/* architecture view */
 function drawTorusKernel() {
   if (!isVisible(architectureView) || !torusCanvas || !torusCtx) return;
 
-  resizeInnerCanvas(torusCanvas);
+  resizeInnerCanvas(torusCanvas, torusCtx);
 
   const w = torusCanvas.getBoundingClientRect().width;
   const h = torusCanvas.getBoundingClientRect().height;
@@ -904,7 +908,7 @@ function drawTorusKernel() {
 function drawFrequencyMonitor() {
   if (!isVisible(architectureView) || !freqCanvas || !freqCtx) return;
 
-  resizeInnerCanvas(freqCanvas);
+  resizeInnerCanvas(freqCanvas, freqCtx);
 
   const w = freqCanvas.getBoundingClientRect().width;
   const h = freqCanvas.getBoundingClientRect().height;
@@ -981,9 +985,32 @@ function runMasterFIC() {
   }, 1000);
 }
 
-/* ===========================
-   DRAWING
-=========================== */
+/* universe rendering */
+function project3D(x, y, z) {
+  const dx = x - state.camera.dragX * 10;
+  const dy = y - state.camera.dragY * 10;
+  const dz = z - (-900);
+
+  const cosYaw = Math.cos(state.camera.rotation);
+  const sinYaw = Math.sin(state.camera.rotation);
+  const x1 = dx * cosYaw - dz * sinYaw;
+  const z1 = dx * sinYaw + dz * cosYaw;
+
+  const y2 = dy;
+  let z2 = z1;
+  if (z2 <= 1) z2 = 1;
+
+  const fov = 920 * state.camera.zoom;
+  const scale = fov / z2;
+
+  return {
+    x: x1 * scale + width / 2,
+    y: y2 * scale + height / 2,
+    scale,
+    depth: z2
+  };
+}
+
 function drawBackground() {
   const bg = ctx.createRadialGradient(
     width * 0.5, height * 0.45, 20,
@@ -1033,31 +1060,6 @@ function drawCore(time) {
   ctx.beginPath();
   ctx.arc(cx, cy, 46 * state.camera.zoom, 0, Math.PI * 2);
   ctx.fill();
-}
-
-function project3D(x, y, z) {
-  const dx = x - state.camera.dragX * 10;
-  const dy = y - state.camera.dragY * 10;
-  const dz = z - (-900);
-
-  const cosYaw = Math.cos(state.camera.rotation);
-  const sinYaw = Math.sin(state.camera.rotation);
-  const x1 = dx * cosYaw - dz * sinYaw;
-  const z1 = dx * sinYaw + dz * cosYaw;
-
-  const y2 = dy;
-  let z2 = z1;
-  if (z2 <= 1) z2 = 1;
-
-  const fov = 920 * state.camera.zoom;
-  const scale = fov / z2;
-
-  return {
-    x: x1 * scale + width / 2,
-    y: y2 * scale + height / 2,
-    scale,
-    depth: z2
-  };
 }
 
 function drawStars(time) {
@@ -1182,10 +1184,10 @@ function drawReactionBursts() {
 
 function updateFps(now) {
   frameCount += 1;
-  if (now - lastFrameTime >= 1000) {
-    fpsCounter.textContent = String(frameCount);
+  if (now - lastFpsTime >= 1000) {
+    if (fpsCounter) fpsCounter.textContent = String(frameCount);
     frameCount = 0;
-    lastFrameTime = now;
+    lastFpsTime = now;
   }
 }
 
@@ -1195,6 +1197,7 @@ function render(now) {
   }
 
   updateFps(now);
+
   ctx.clearRect(0, 0, width, height);
   drawBackground();
   drawCore(now);
@@ -1209,9 +1212,7 @@ function render(now) {
   requestAnimationFrame(render);
 }
 
-/* ===========================
-   CONTROLS
-=========================== */
+/* controls */
 zoomSlider?.addEventListener("input", (e) => {
   state.camera.zoom = Number(e.target.value);
   syncControlLabels();
@@ -1290,9 +1291,7 @@ resetUniverseBtn?.addEventListener("click", () => {
   handleCommand("reset");
 });
 
-/* ===========================
-   POINTER / TOUCH
-=========================== */
+/* pointer */
 function pointerDown(x, y) {
   dragging = true;
   lastPointerX = x;
@@ -1341,9 +1340,7 @@ canvas.addEventListener("wheel", (e) => {
   syncControlLabels();
 }, { passive: false });
 
-/* ===========================
-   EVENTS
-=========================== */
+/* events */
 window.addEventListener("resize", resizeCanvas);
 
 homeCards.forEach((card) => {
@@ -1354,11 +1351,11 @@ homeCards.forEach((card) => {
 
     if (view === "archive") {
       try {
-        const volumes = await fetchVolumeList();
-        renderVolumeList(volumes);
-        archiveContent.textContent = volumes.length
+        const listData = await fetchVolumeList();
+        renderVolumeList(listData.volumes || []);
+        archiveContent.textContent = (listData.volumes || []).length
           ? "Click a volume to load its full stored data."
-          : "No mapped volumes yet. Run process or upload all first.";
+          : "No mapped volumes yet. Run process, seed, or upload all first.";
       } catch (error) {
         archiveContent.textContent = `Failed to load archive list: ${error.message}`;
       }
@@ -1388,11 +1385,11 @@ navItems.forEach((button) => {
 
     if (module === "archive") {
       try {
-        const volumes = await fetchVolumeList();
-        renderVolumeList(volumes);
-        archiveContent.textContent = volumes.length
+        const listData = await fetchVolumeList();
+        renderVolumeList(listData.volumes || []);
+        archiveContent.textContent = (listData.volumes || []).length
           ? "Click a volume to load its full stored data."
-          : "No mapped volumes yet. Run process or upload all first.";
+          : "No mapped volumes yet. Run process, seed, or upload all first.";
       } catch (error) {
         archiveContent.textContent = `Failed to load archive list: ${error.message}`;
       }
@@ -1430,13 +1427,13 @@ window.addEventListener("keydown", (e) => {
   }
 });
 
-aiSendBtn.addEventListener("click", async () => {
+aiSendBtn?.addEventListener("click", async () => {
   const value = aiInput.value;
   aiInput.value = "";
   await runAiPrompt(value);
 });
 
-aiInput.addEventListener("keydown", async (e) => {
+aiInput?.addEventListener("keydown", async (e) => {
   if (e.key === "Enter") {
     const value = aiInput.value;
     aiInput.value = "";
@@ -1450,14 +1447,12 @@ aiQuickButtons.forEach((btn) => {
   });
 });
 
-aiClearBtn.addEventListener("click", () => {
+aiClearBtn?.addEventListener("click", () => {
   aiMessages.innerHTML = "";
   aiMessage("AI console cleared.");
 });
 
-/* ===========================
-   BOOT
-=========================== */
+/* boot */
 setInterval(() => {
   cycleCount += 1;
   if (cycleDisplay) cycleDisplay.textContent = cycleCount.toLocaleString();
