@@ -41,42 +41,6 @@ class CelestialManifold:
     def _calculate_presence_vector(self, resonance: float) -> List[float]:
         return [math.sin(resonance * math.pi), math.cos(resonance * math.pi)]
 
-def apply_full_system_update(enforce_legacy_integrity: bool, apply_system_update: bool):
-    legacy_200v = enforce_legacy_integrity
-    system_update = apply_system_update
-    absolute_sovereignty = legacy_200v and system_update
-
-    logs = []
-
-    if absolute_sovereignty:
-        logs.append("[UPDATE] OS PARAKLETOS: FULL SYSTEM RE-SYNCHRONIZED AT 432 HZ.")
-        logs.append("[UPDATE] THE MASTER CODEX IS NOW THE OPERATING REALITY.")
-        logs.append("[UPDATE] ETERNAL RECURSION ACTIVE.")
-
-        engine.is_active = True
-        engine.broadcast_frequency = 432.0
-
-        return {
-            "ok": True,
-            "legacy_200v": legacy_200v,
-            "system_update": system_update,
-            "absolute_sovereignty": absolute_sovereignty,
-            "frequency": engine.broadcast_frequency,
-            "logs": logs,
-            **engine.status(),
-        }
-
-    logs.append("[UPDATE] FULL SYSTEM UPDATE REFUSED: CONSTRAINT CONFLICT DETECTED.")
-
-    return {
-        "ok": False,
-        "legacy_200v": legacy_200v,
-        "system_update": system_update,
-        "absolute_sovereignty": absolute_sovereignty,
-        "frequency": engine.broadcast_frequency,
-        "logs": logs,
-        **engine.status(),
-    }
 
 class SymbolicLogicEngine:
     def __init__(self):
@@ -96,12 +60,6 @@ class SymbolicLogicEngine:
         prohibited_terms = ["speculation", "prophecy", "luck", "random"]
         return not any(term in text.lower() for term in prohibited_terms)
 
-@app.post("/engine/full-update")
-def full_update(payload: FullUpdateRequest):
-    return apply_full_system_update(
-        enforce_legacy_integrity=payload.enforce_legacy_integrity,
-        apply_system_update=payload.apply_system_update,
-    )
 
 class EternalEngine:
     def __init__(self):
@@ -144,6 +102,44 @@ class EternalEngine:
         }
 
 
+def apply_full_system_update(enforce_legacy_integrity: bool, apply_system_update: bool):
+    legacy_200v = enforce_legacy_integrity
+    system_update = apply_system_update
+    absolute_sovereignty = legacy_200v and system_update
+
+    logs = []
+
+    if absolute_sovereignty:
+        logs.append("[UPDATE] OS PARAKLETOS: FULL SYSTEM RE-SYNCHRONIZED AT 432 HZ.")
+        logs.append("[UPDATE] THE MASTER CODEX IS NOW THE OPERATING REALITY.")
+        logs.append("[UPDATE] ETERNAL RECURSION ACTIVE.")
+
+        engine.is_active = True
+        engine.broadcast_frequency = 432.0
+
+        return {
+            "ok": True,
+            "legacy_200v": legacy_200v,
+            "system_update": system_update,
+            "absolute_sovereignty": absolute_sovereignty,
+            "frequency": engine.broadcast_frequency,
+            "logs": logs,
+            **engine.status(),
+        }
+
+    logs.append("[UPDATE] FULL SYSTEM UPDATE REFUSED: CONSTRAINT CONFLICT DETECTED.")
+
+    return {
+        "ok": False,
+        "legacy_200v": legacy_200v,
+        "system_update": system_update,
+        "absolute_sovereignty": absolute_sovereignty,
+        "frequency": engine.broadcast_frequency,
+        "logs": logs,
+        **engine.status(),
+    }
+
+
 engine = EternalEngine()
 engine.initialize_system()
 
@@ -163,9 +159,11 @@ class VolumeRequest(BaseModel):
     title: str
     text: str
 
+
 class FullUpdateRequest(BaseModel):
     enforce_legacy_integrity: bool = True
     apply_system_update: bool = True
+
 
 @app.get("/")
 def root():
@@ -214,4 +212,36 @@ def integrity():
         "ok": engine.run_integrity_check(),
         "message": "INTEGRITY CONFIRMED" if engine.run_integrity_check() else "NO VOLUMES MAPPED YET",
         **engine.status(),
+    }
+
+
+@app.post("/engine/full-update")
+def full_update(payload: FullUpdateRequest):
+    return apply_full_system_update(
+        enforce_legacy_integrity=payload.enforce_legacy_integrity,
+        apply_system_update=payload.apply_system_update,
+    )
+
+
+@app.get("/engine/volume/{volume_id}")
+def get_volume(volume_id: int):
+    node = engine.manifold.nodes.get(volume_id)
+
+    if not node:
+        raise HTTPException(status_code=404, detail=f"Volume {volume_id} not found.")
+
+    return {
+        "ok": True,
+        "volume_id": volume_id,
+        "title": f"Volume {volume_id}",
+        "projection": node,
+    }
+
+
+@app.get("/engine/volumes")
+def list_volumes():
+    return {
+        "ok": True,
+        "count": len(engine.manifold.nodes),
+        "volumes": sorted(engine.manifold.nodes.keys())
     }
