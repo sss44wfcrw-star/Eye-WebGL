@@ -22,7 +22,7 @@ class CelestialManifold:
         title: str,
         content: str,
         specs: str = "",
-        source: str = "manual"
+        source: str = "manual",
     ) -> Dict[str, Any]:
         if volume_id < 1 or volume_id > self.dimension:
             raise ValueError("Volume ID outside the 200-volume legacy range.")
@@ -57,11 +57,13 @@ class SymbolicLogicEngine:
     def verify_proposition(self, proposition: str) -> bool:
         is_valid = self._check_consistency_rules(proposition)
         if is_valid:
-            self.verification_history.append({
-                "timestamp": time.time(),
-                "status": "Verified",
-                "checksum": hashlib.md5(proposition.encode()).hexdigest()
-            })
+            self.verification_history.append(
+                {
+                    "timestamp": time.time(),
+                    "status": "Verified",
+                    "checksum": hashlib.md5(proposition.encode()).hexdigest(),
+                }
+            )
         return is_valid
 
     def _check_consistency_rules(self, text: str) -> bool:
@@ -88,7 +90,7 @@ class EternalEngine:
         title: str,
         text: str,
         specs: str = "",
-        source: str = "manual"
+        source: str = "manual",
     ):
         if not self.is_active:
             raise RuntimeError("Engine must be initialized first.")
@@ -125,8 +127,12 @@ class EternalEngine:
             text = volume.get("text", "")
             if not text:
                 continue
+
+            already_exists = volume_id in self.manifold.nodes
             self.process_volume(volume_id, title, text, specs, source="pdf_seed")
-            loaded += 1
+            if not already_exists:
+                loaded += 1
+
         return loaded
 
 
@@ -200,7 +206,7 @@ class FullUpdateRequest(BaseModel):
 def root():
     return {
         "message": "PARAKLETOS backend is running",
-        "seeded_volumes": seeded_count,
+        "seeded_volumes": len(engine.manifold.nodes),
         "system_status": SYSTEM_CONFIG.get("system_status", "UNKNOWN"),
     }
 
@@ -251,9 +257,10 @@ def process_volume(payload: VolumeRequest):
 
 @app.get("/engine/integrity")
 def integrity():
+    ok = engine.run_integrity_check()
     return {
-        "ok": engine.run_integrity_check(),
-        "message": "INTEGRITY CONFIRMED" if engine.run_integrity_check() else "NO VOLUMES MAPPED YET",
+        "ok": ok,
+        "message": "INTEGRITY CONFIRMED" if ok else "NO VOLUMES MAPPED YET",
         **engine.status(),
     }
 
@@ -289,13 +296,15 @@ def list_volumes():
     items = []
     for volume_id in sorted(engine.manifold.nodes.keys()):
         node = engine.manifold.nodes[volume_id]
-        items.append({
-            "volume_id": volume_id,
-            "title": node.get("title", f"Volume {volume_id}"),
-            "specs": node.get("specs", ""),
-            "source": node.get("source", "unknown"),
-            "checksum": node.get("checksum", ""),
-        })
+        items.append(
+            {
+                "volume_id": volume_id,
+                "title": node.get("title", f"Volume {volume_id}"),
+                "specs": node.get("specs", ""),
+                "source": node.get("source", "unknown"),
+                "checksum": node.get("checksum", ""),
+            }
+        )
 
     return {
         "ok": True,
@@ -310,7 +319,7 @@ def bootstrap_seed():
     return {
         "ok": True,
         "loaded": loaded,
-        "message": "Seed volumes loaded."
+        "message": "Seed volumes loaded.",
     }
 
 
@@ -319,7 +328,7 @@ def get_native_layers():
     return {
         "ok": True,
         "layers": NATIVE_LAYERS,
-        "system": SYSTEM_CONFIG
+        "system": SYSTEM_CONFIG,
     }
 
 
@@ -332,5 +341,5 @@ def get_system_config():
 def get_spatial_nodes():
     return {
         "ok": True,
-        "nodes": SYSTEM_CONFIG.get("node_parameters", {})
+        "nodes": SYSTEM_CONFIG.get("node_parameters", {}),
     }
