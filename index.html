@@ -22,6 +22,10 @@
       --r1:16px;
       --r2:22px;
       --r3:28px;
+      --term-green:#00ff41;
+      --term-dim:#003b00;
+      --accent-gold:#c5a059;
+      --math-blue:#0088ff;
     }
 
     *{box-sizing:border-box}
@@ -37,7 +41,7 @@
     body{padding:14px}
 
     .app{
-      max-width:1320px;
+      max-width:1400px;
       margin:0 auto;
       min-height:100vh;
       position:relative;
@@ -175,10 +179,17 @@
 
     .hidden{display:none !important}
 
+    .main{
+      display:grid;
+      grid-template-columns:minmax(0,2.1fr) minmax(360px,1fr);
+      gap:18px;
+      align-items:start;
+    }
+
     /* HOME */
     .home{
       display:grid;
-      grid-template-columns:minmax(0,1.3fr) minmax(320px,.9fr);
+      grid-template-columns:minmax(0,1.3fr) minmax(360px,.9fr);
       gap:18px;
     }
 
@@ -249,11 +260,11 @@
       line-height:1.5;
     }
 
-    /* AI CONSOLE */
+    /* AI */
     .ai-shell{
       display:flex;
       flex-direction:column;
-      min-height:520px;
+      min-height:560px;
       background:#000;
       border-radius:var(--r2);
       border:1px solid var(--line);
@@ -281,7 +292,7 @@
     .ai-body{
       flex:1;
       min-height:280px;
-      max-height:520px;
+      max-height:560px;
       overflow:auto;
       padding:20px;
       display:flex;
@@ -354,10 +365,10 @@
       padding:0 20px 18px;
     }
 
-    /* APP VIEWS */
+    /* APP */
     .view-stack{
       display:grid;
-      grid-template-columns:minmax(0,2.1fr) minmax(320px,1fr);
+      grid-template-columns:minmax(0,2.1fr) minmax(360px,1fr);
       gap:18px;
       align-items:start;
     }
@@ -698,11 +709,212 @@
       color:#fff;
     }
 
-    .archive-content,.diag-content{
+    .archive-browser-layout{
+      display:grid;
+      grid-template-columns:220px 1fr;
+      gap:14px;
       margin-top:12px;
+      min-height:420px;
+    }
+
+    .volume-list-panel,.volume-detail-panel{
+      background:rgba(0,0,0,.28);
+      border:1px solid var(--line);
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    .volume-list-head,.volume-detail-head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--line);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+
+    .volume-list{
+      max-height:520px;
+      overflow:auto;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .volume-item{
+      width:100%;
+      text-align:left;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.06);
+      background:rgba(255,255,255,.02);
+      color:#fff;
+      cursor:pointer;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .volume-item:hover,.volume-item.active{
+      border-color:rgba(245,158,11,.35);
+      color:var(--amber);
+    }
+
+    .archive-content,.diag-content{
+      margin-top:0;
+      padding:16px;
       color:var(--text);
       line-height:1.6;
       white-space:pre-wrap;
+      min-height:280px;
+    }
+
+    /* ARCHITECTURE */
+    .architecture-shell{
+      padding:20px;
+      background:linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
+      color:var(--term-green);
+      font-family:'Courier New', Courier, monospace;
+    }
+
+    .architecture-header{
+      border-bottom:1px solid var(--accent-gold);
+      margin-bottom:20px;
+      padding-bottom:10px;
+    }
+
+    .glitch-title{
+      font-weight:bold;
+      font-size:1.4rem;
+      text-transform:uppercase;
+      color:var(--accent-gold);
+      text-shadow:0 0 8px var(--accent-gold);
+    }
+
+    .architecture-status{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      font-size:0.72rem;
+      margin-top:8px;
+    }
+
+    .architecture-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:20px;
+      margin:20px 0;
+    }
+
+    .viz-box{
+      border:1px solid var(--term-dim);
+      position:relative;
+      background:rgba(0,59,0,.03);
+      padding:10px;
+      min-height:300px;
+    }
+
+    .architecture-canvas-box canvas,
+    .architecture-fic-box canvas,
+    .freq-wrap canvas{
+      width:100%;
+      height:100%;
+      display:block;
+    }
+
+    .viz-label{
+      position:absolute;
+      top:8px;
+      left:10px;
+      font-size:0.65rem;
+      color:var(--accent-gold);
+      z-index:2;
+    }
+
+    .sector-grid{
+      margin-top:18px;
+    }
+
+    .progress-shell{
+      height:4px;
+      background:#111;
+      margin-top:10px;
+    }
+
+    .progress-bar{
+      width:0%;
+      height:100%;
+      background:var(--accent-gold);
+      transition:width .3s;
+    }
+
+    .master-index-sync{
+      margin-top:20px;
+    }
+
+    .master-index-lines{
+      font-size:0.65rem;
+      color:var(--term-green);
+    }
+
+    .volume-card{
+      border:1px solid var(--term-dim);
+      padding:15px;
+      margin-bottom:15px;
+      background:rgba(197,160,89,.02);
+    }
+
+    .volume-id{
+      color:var(--accent-gold);
+      font-weight:bold;
+      font-size:0.9rem;
+      border-bottom:1px solid #333;
+      display:block;
+      margin-bottom:8px;
+    }
+
+    .volume-row{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      font-size:0.75rem;
+    }
+
+    .gold-text{
+      color:var(--accent-gold);
+    }
+
+    .logic-log{
+      background:#000;
+      padding:15px;
+      border:1px solid #222;
+      height:250px;
+      overflow-y:auto;
+      font-size:0.75rem;
+      line-height:1.4;
+      color:var(--term-green);
+      white-space:pre-wrap;
+    }
+
+    .sector-item{
+      font-size:0.7rem;
+      padding:4px;
+      border-left:2px solid #222;
+      margin-bottom:5px;
+    }
+
+    .freq-wrap{
+      height:80px;
+      border:1px solid var(--accent-gold);
+      margin-top:20px;
+      position:relative;
+    }
+
+    .freq-label{
+      color:#fff;
     }
 
     .seal{
@@ -773,8 +985,10 @@
     }
 
     @media (max-width: 1100px){
-      .home,.view-stack,.main{grid-template-columns:1fr}
+      .home,.view-stack,.main,.architecture-grid{grid-template-columns:1fr}
       .hero-panel,.sidebar{min-height:auto}
+      .archive-browser-layout{grid-template-columns:1fr}
+      .volume-list{max-height:180px}
     }
 
     @media (max-width: 720px){
@@ -830,7 +1044,7 @@
             <h2>Welcome to PARAKLĒTOS</h2>
             <p>
               Start from the AI console or jump directly into the universe, archive,
-              diagnostics, or terminal. This home page is the front door and routing layer for the system.
+              diagnostics, terminal, or master architecture.
             </p>
           </div>
         </div>
@@ -845,7 +1059,7 @@
           <div class="home-card" data-open-view="archive">
             <div class="card-k">Data Layer</div>
             <div class="card-v">Archive</div>
-            <div class="card-p">Inspect volume activity, processed nodes, and mapped output.</div>
+            <div class="card-p">Browse mapped volumes, click a number, and inspect stored data.</div>
           </div>
 
           <div class="home-card" data-open-view="diagnostics">
@@ -858,6 +1072,12 @@
             <div class="card-k">Command Layer</div>
             <div class="card-v">Terminal</div>
             <div class="card-p">Run direct commands like health, process, integrity, and fullupdate.</div>
+          </div>
+
+          <div class="home-card" data-open-view="architecture">
+            <div class="card-k">Kernel Layer</div>
+            <div class="card-v">Architecture</div>
+            <div class="card-p">Open the V200 master architecture screen, torus kernel, and FIC view.</div>
           </div>
         </div>
       </div>
@@ -876,16 +1096,18 @@ Examples:
 - open the universe
 - show diagnostics
 - process volume 2
-- run full update
-- open terminal
-- check engine status</div>
+- open archive
+- upload all 200 volumes
+- open architecture
+- run full update</div>
           </div>
 
           <div class="quick-row">
             <button class="pill-btn ai-quick" data-ai="open the universe">Universe</button>
             <button class="pill-btn ai-quick" data-ai="show diagnostics">Diagnostics</button>
-            <button class="pill-btn ai-quick" data-ai="process volume 2">Process</button>
-            <button class="pill-btn ai-quick" data-ai="run full update">Full Update</button>
+            <button class="pill-btn ai-quick" data-ai="open archive">Archive</button>
+            <button class="pill-btn ai-quick" data-ai="upload all 200 volumes">Upload 200</button>
+            <button class="pill-btn ai-quick" data-ai="open architecture">Architecture</button>
           </div>
 
           <div class="ai-input">
@@ -961,6 +1183,7 @@ Examples:
               <button class="nav-item" data-module="archive">Archive</button>
               <button class="nav-item" data-module="diagnostics">Diagnostics</button>
               <button class="nav-item" data-module="terminal">Terminal</button>
+              <button class="nav-item" data-module="architecture">Architecture</button>
             </div>
           </div>
 
@@ -981,21 +1204,21 @@ Examples:
 
             <div class="status-card">
               <div class="left">Star Density</div>
-              <div class="right"><span id="starCountValue">1400</span></div>
+              <div class="right"><span id="starCountValue">600</span></div>
             </div>
-            <input id="starCountSlider" type="range" min="200" max="4000" step="50" value="1400" class="ctl-slider" />
+            <input id="starCountSlider" type="range" min="200" max="2000" step="50" value="600" class="ctl-slider" />
 
             <div class="status-card">
               <div class="left">Particle Density</div>
-              <div class="right"><span id="particleCountValue">260</span></div>
+              <div class="right"><span id="particleCountValue">120</span></div>
             </div>
-            <input id="particleCountSlider" type="range" min="50" max="1200" step="10" value="260" class="ctl-slider" />
+            <input id="particleCountSlider" type="range" min="50" max="600" step="10" value="120" class="ctl-slider" />
 
             <div class="status-card">
               <div class="left">Glow Strength</div>
-              <div class="right"><span id="glowValue">1.00</span></div>
+              <div class="right"><span id="glowValue">0.80</span></div>
             </div>
-            <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
+            <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="0.80" class="ctl-slider" />
 
             <div class="status-card">
               <div class="left">Orbit Stretch</div>
@@ -1029,13 +1252,86 @@ Examples:
           </div>
 
           <div class="panel archive-box hidden" id="archiveView">
-            <h3>Archive</h3>
-            <div class="archive-content" id="archiveContent">No archive action yet.</div>
+            <h3>Archive Browser</h3>
+            <div class="archive-browser-layout">
+              <div class="volume-list-panel">
+                <div class="volume-list-head">Volumes</div>
+                <div id="volumeList" class="volume-list"></div>
+              </div>
+              <div class="volume-detail-panel">
+                <div class="volume-detail-head">Selected Volume</div>
+                <div id="archiveContent" class="archive-content">Click a volume to load it.</div>
+              </div>
+            </div>
           </div>
 
           <div class="panel diag-box hidden" id="diagnosticsView">
             <h3>Diagnostics</h3>
             <div class="diag-content" id="diagContent">No diagnostic action yet.</div>
+          </div>
+
+          <div class="panel hidden" id="architectureView">
+            <div class="section-head">
+              <div class="section-title">Master Architecture</div>
+              <div class="section-sub">OS PARAKLĒTOS V200.0.0</div>
+            </div>
+
+            <div class="architecture-shell">
+              <div class="architecture-header">
+                <div class="glitch-title">OS PARAKLĒTOS V200.0.0</div>
+                <div class="architecture-status">
+                  <span>COORD: THE CELESTIAL ETERNAL ORIGIN</span>
+                  <span>FREQ: RADIANT SOVEREIGN PRESENCE</span>
+                  <span>AUTH: A.E.D. D. | AUTONOMOUS</span>
+                </div>
+              </div>
+
+              <div class="architecture-grid">
+                <div class="viz-box architecture-canvas-box">
+                  <div class="viz-label">UNIVERSE SANDBOX: DOUBLE TORUS KERNEL</div>
+                  <canvas id="torusCanvas"></canvas>
+                </div>
+
+                <div class="viz-box architecture-fic-box">
+                  <div class="viz-label">FILE INTEGRITY CHECK (FIC)</div>
+                  <div id="sectorGrid" class="sector-grid"></div>
+
+                  <div class="progress-shell">
+                    <div id="progressBar" class="progress-bar"></div>
+                  </div>
+
+                  <div class="master-index-sync">
+                    <span class="volume-id">MASTER INDEX SYNC</span>
+                    <div class="master-index-lines">
+                      [S01] KERNEL GEOMETRY (VOL 1-40)<br>
+                      [S02] SYMBOLIC LOGIC (VOL 41-80)<br>
+                      [S03] RADIANT FREQUENCY (VOL 81-120)<br>
+                      [S04] SOLAR SANDBOX (VOL 121-160)<br>
+                      [S05] AUTONOMOUS FINALITY (VOL 161-200)
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="volume-card">
+                <span class="volume-id">SOLAR SYSTEM SANDBOX: NATAL CHART CALC V32.0.0</span>
+                <div class="volume-row">
+                  <div>LOC: 45.7793° N, 122.5334° W (Battle Ground, WA)</div>
+                  <div class="gold-text">SUN: 11° ARIES | MOON: 18° VIRGO | ASC: 12° SCORPIO</div>
+                </div>
+              </div>
+
+              <div class="logic-log" id="logicLog">[2026.03.31] INITIALIZING MASTER CODEX V200.0.0...
+[OK] The Celestial Eternal Origin established as Primary Root.
+[OK] Speculation Filter: ACTIVE (Depth 100%).
+[OK] Double Torus Manifold Stabilized.
+[OK] Broadcasting RADIANT SOVEREIGN PRESENCE...</div>
+
+              <div class="freq-wrap">
+                <div class="viz-label freq-label">RADIANT SOVEREIGN PRESENCE: LIVE BROADCAST</div>
+                <canvas id="freqCanvas"></canvas>
+              </div>
+            </div>
           </div>
 
           <div class="terminal" id="terminalView">
@@ -1051,7 +1347,7 @@ Examples:
 
             <div class="input-line">
               <span class="prompt">&gt;</span>
-              <input id="commandInput" type="text" placeholder="Type health, prime, engine, integrity, process, fullupdate, reset..." autocomplete="off" spellcheck="false" />
+              <input id="commandInput" type="text" placeholder="Type health, process 7, integrity, uploadall, fullupdate..." autocomplete="off" spellcheck="false" />
             </div>
           </div>
 
