@@ -47,6 +47,7 @@ const diagnosticsView = document.getElementById("diagnosticsView");
 const terminalView = document.getElementById("terminalView");
 const archiveContent = document.getElementById("archiveContent");
 const diagContent = document.getElementById("diagContent");
+const volumeList = document.getElementById("volumeList");
 
 /* controls */
 const zoomSlider = document.getElementById("zoomSlider");
@@ -111,7 +112,6 @@ let height = 0;
 let lastFrameTime = performance.now();
 let frameCount = 0;
 let cycleCount = 0;
-let activeMode = "sandbox";
 let dragging = false;
 let lastPointerX = 0;
 let lastPointerY = 0;
@@ -181,7 +181,7 @@ function showApp(view = "universe") {
 }
 
 /* ===========================
-   INIT / SCENE
+   SCENE
 =========================== */
 function resizeCanvas() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -298,9 +298,10 @@ function reactToFullUpdate() {
 }
 
 function applyModeVisuals() {
-  if (!statusText) return;
-  statusText.textContent = "UNLOCKED";
-  statusText.style.color = "#22c55e";
+  if (statusText) {
+    statusText.textContent = "UNLOCKED";
+    statusText.style.color = "#22c55e";
+  }
   if (headerRealityState) headerRealityState.textContent = "Sovereign Constant";
 }
 
@@ -333,6 +334,64 @@ async function apiPost(path, body) {
   return data;
 }
 
+async function fetchVolumeList() {
+  const data = await apiGet("/engine/volumes");
+  return data.volumes || [];
+}
+
+async function fetchVolumeById(volumeId) {
+  return await apiGet(`/engine/volume/${volumeId}`);
+}
+
+function renderVolumeList(volumes = []) {
+  if (!volumeList) return;
+
+  volumeList.innerHTML = "";
+
+  if (!volumes.length) {
+    const empty = document.createElement("div");
+    empty.className = "entry";
+    empty.textContent = "No mapped volumes yet.";
+    volumeList.appendChild(empty);
+    return;
+  }
+
+  volumes.forEach((id) => {
+    const btn = document.createElement("button");
+    btn.className = "volume-item";
+    btn.textContent = `Volume ${id}`;
+    btn.addEventListener("click", async () => {
+      document.querySelectorAll(".volume-item").forEach((el) => el.classList.remove("active"));
+      btn.classList.add("active");
+      await loadVolumeDetail(id);
+    });
+    volumeList.appendChild(btn);
+  });
+}
+
+async function loadVolumeDetail(volumeId) {
+  try {
+    archiveContent.textContent = `Loading Volume ${volumeId}...`;
+    const data = await fetchVolumeById(volumeId);
+
+    archiveContent.textContent =
+`Volume ID: ${data.volume_id}
+Title: ${data.title}
+Origin: ${data.projection.origin}
+Resonance: ${Number(data.projection.resonance).toFixed(3)}
+Presence Vector: ${data.projection.presence_vector.join(", ")}
+Checksum: ${data.projection.checksum}
+
+Raw Projection:
+${JSON.stringify(data.projection, null, 2)}`;
+
+    logEntry(`Loaded Volume ${volumeId}.`, "ARCHIVE");
+  } catch (error) {
+    archiveContent.textContent = `Failed to load Volume ${volumeId}: ${error.message}`;
+    logEntry(`Load volume failed: ${error.message}`, "ERR");
+  }
+}
+
 async function runHealthCheck() {
   logEntry("Initiating backend diagnostics...", "REQ");
   backendStatus.textContent = "PINGING";
@@ -358,10 +417,12 @@ async function runHealthCheck() {
     }
 
     logEntry(`Health OK. status=${data.status} logic=${data.logic_state}`, "OK");
-    diagContent.textContent = `Health
+    if (diagContent) {
+      diagContent.textContent = `Health
 Status: ${data.status}
 Logic: ${data.logic_state}
 Resonance: ${data.resonance}`;
+    }
   } catch (error) {
     backendStatus.textContent = "OFFLINE";
     solverStatus.textContent = "ERROR";
@@ -372,7 +433,7 @@ Resonance: ${data.resonance}`;
     headerBackendState.textContent = "Offline";
     headerBackendState.className = "v red";
     logEntry(`Health check failed: ${error.message}`, "ERR");
-    diagContent.textContent = `Health failed: ${error.message}`;
+    if (diagContent) diagContent.textContent = `Health failed: ${error.message}`;
   }
 }
 
@@ -385,10 +446,12 @@ async function runPrimeProtocol() {
       `RSP=${data.radiant_sovereign_presence}, coherence=${data.phase_coherence}, frequency=${data.frequency}`,
       "PRIME"
     );
-    diagContent.textContent = `Resonance
+    if (diagContent) {
+      diagContent.textContent = `Resonance
 RSP: ${data.radiant_sovereign_presence}
 Coherence: ${data.phase_coherence}
 Frequency: ${data.frequency}`;
+    }
   } catch (error) {
     logEntry(`Resonance check failed: ${error.message}`, "ERR");
   }
@@ -406,16 +469,25 @@ async function runEngineStatus() {
       "ENGINE"
     );
 
-    diagContent.textContent = `Engine
+    if (diagContent) {
+      diagContent.textContent = `Engine
 Active: ${data.active}
 Mapped Volumes: ${data.mapped_volumes}
 Verification Events: ${data.verification_events}
 Uptime: ${data.uptime_seconds}s`;
+    }
 
-    archiveContent.textContent = `Archive State
+    if (archiveContent) {
+      archiveContent.textContent = `Archive State
 Mapped volumes: ${data.mapped_volumes}
 Verification events: ${data.verification_events}
 Origin: ${data.origin}`;
+    }
+
+    try {
+      const volumes = await fetchVolumeList();
+      renderVolumeList(volumes);
+    } catch {}
   } catch (error) {
     logEntry(`Engine status failed: ${error.message}`, "ERR");
   }
@@ -428,10 +500,12 @@ async function runIntegrityCheck() {
     reactToMappedVolumes(data.mapped_volumes || 0);
     reactToIntegrity(data.verification_events || 0);
     logEntry(`${data.message} mapped=${data.mapped_volumes} events=${data.verification_events}`, "CHECK");
-    diagContent.textContent = `Integrity
+    if (diagContent) {
+      diagContent.textContent = `Integrity
 ${data.message}
 Mapped: ${data.mapped_volumes}
 Events: ${data.verification_events}`;
+    }
   } catch (error) {
     logEntry(`Integrity check failed: ${error.message}`, "ERR");
   }
@@ -456,13 +530,21 @@ async function runProcessVolume(volumeId = 2) {
       "ARCHIVE"
     );
 
-    archiveContent.textContent =
+    if (archiveContent) {
+      archiveContent.textContent =
 `Processed Volume
 ID: ${data.volume_id}
 Title: ${data.title}
 Resonance: ${data.projection.resonance.toFixed(3)}
 Vector: ${data.projection.presence_vector.join(",")}
 Checksum: ${data.projection.checksum}`;
+    }
+
+    try {
+      const volumes = await fetchVolumeList();
+      renderVolumeList(volumes);
+      await loadVolumeDetail(volumeId);
+    } catch {}
   } catch (error) {
     logEntry(`Process failed: ${error.message}`, "ERR");
   }
@@ -485,20 +567,26 @@ async function uploadAllVolumes() {
       reactToMappedVolumes(i);
       spawnVolumeCluster(i);
 
-      archiveContent.textContent =
+      if (archiveContent) {
+        archiveContent.textContent =
 `Uploading All Archives
 Current Volume: ${i} / 200
 Last Title: ${data.title}
 Resonance: ${data.projection.resonance.toFixed(3)}
 Checksum: ${data.projection.checksum}`;
+      }
 
       logEntry(`✔ Volume ${i} uploaded`, "ARCHIVE");
-
       await new Promise((resolve) => setTimeout(resolve, 80));
     } catch (err) {
       logEntry(`✖ Volume ${i} failed: ${err.message}`, "ERR");
     }
   }
+
+  try {
+    const volumes = await fetchVolumeList();
+    renderVolumeList(volumes);
+  } catch {}
 
   logEntry("✅ ALL 200 VOLUMES UPLOADED", "DONE");
   aiMessage("All 200 volumes were processed.");
@@ -526,12 +614,14 @@ async function runFullUpdate() {
       reactToMappedVolumes(data.mapped_volumes || state.mappedVolumes || 1);
       applyModeVisuals();
 
-      diagContent.textContent =
+      if (diagContent) {
+        diagContent.textContent =
 `Full Update
 OK: ${data.ok}
 Frequency: ${data.frequency}
 Logs:
 ${(data.logs || []).join("\n")}`;
+      }
     }
   } catch (error) {
     logEntry(`Full update failed: ${error.message}`, "ERR");
@@ -558,6 +648,11 @@ function handleCommand(raw) {
   if (command === "fullupdate") return runFullUpdate();
   if (command === "uploadall") return uploadAllVolumes();
 
+  if (command.startsWith("process ")) {
+    const id = Number(command.split(" ")[1]);
+    if (Number.isInteger(id) && id >= 1 && id <= 200) return runProcessVolume(id);
+  }
+
   if (command === "clear") {
     systemLog.innerHTML = "";
     logEntry("Console cleared.", "SYS");
@@ -582,18 +677,19 @@ function handleCommand(raw) {
     state.universePulse = 1;
     state.resonanceBoost = 1;
 
-    zoomSlider.value = "1.00";
-    rotationSpeedSlider.value = "1.00";
-    starCountSlider.value = "1400";
-    particleCountSlider.value = "260";
-    glowSlider.value = "1.00";
-    orbitStretchSlider.value = "0.36";
+    if (zoomSlider) zoomSlider.value = "1.00";
+    if (rotationSpeedSlider) rotationSpeedSlider.value = "1.00";
+    if (starCountSlider) starCountSlider.value = "1400";
+    if (particleCountSlider) particleCountSlider.value = "260";
+    if (glowSlider) glowSlider.value = "1.00";
+    if (orbitStretchSlider) orbitStretchSlider.value = "0.36";
 
     initScene(1400, 260);
     syncControlLabels();
     applyModeVisuals();
-    archiveContent.textContent = "No archive action yet.";
-    diagContent.textContent = "No diagnostic action yet.";
+    if (archiveContent) archiveContent.textContent = "No archive action yet.";
+    if (diagContent) diagContent.textContent = "No diagnostic action yet.";
+    if (volumeList) volumeList.innerHTML = "";
     logEntry("Universe reset.", "SYS");
     return;
   }
@@ -637,6 +733,17 @@ async function runAiPrompt(raw) {
   if (q.includes("archive")) {
     showApp("archive");
     aiMessage("Opening the archive view.");
+    try {
+      const volumes = await fetchVolumeList();
+      renderVolumeList(volumes);
+      if (archiveContent) {
+        archiveContent.textContent = volumes.length
+          ? "Click a volume to load its full stored data."
+          : "No mapped volumes yet. Run process or upload all first.";
+      }
+    } catch (error) {
+      if (archiveContent) archiveContent.textContent = `Failed to load archive list: ${error.message}`;
+    }
     return;
   }
 
@@ -674,7 +781,18 @@ async function runAiPrompt(raw) {
     return;
   }
 
-  if (q.includes("process") || q.includes("volume 2") || q.includes("map volume")) {
+  const volMatch = q.match(/volume\s+(\d{1,3})/);
+  if (volMatch) {
+    const volumeId = Number(volMatch[1]);
+    if (volumeId >= 1 && volumeId <= 200) {
+      showApp("archive");
+      aiMessage(`Processing Volume ${volumeId}.`);
+      await runProcessVolume(volumeId);
+      return;
+    }
+  }
+
+  if (q.includes("process") || q.includes("map volume")) {
     showApp("archive");
     aiMessage("Processing Volume 2.");
     await runProcessVolume(2);
@@ -695,7 +813,7 @@ async function runAiPrompt(raw) {
     return;
   }
 
-  aiMessage("I can route you to: home, universe, archive, diagnostics, terminal, process volume 2, upload all 200 volumes, resonance, engine, integrity, or full update.");
+  aiMessage("I can route you to: home, universe, archive, diagnostics, terminal, process volume 2 or any volume number, upload all 200 volumes, resonance, engine, integrity, or full update.");
 }
 
 /* ===========================
@@ -977,26 +1095,26 @@ centerViewBtn?.addEventListener("click", () => {
 
 zoomInBtn?.addEventListener("click", () => {
   state.camera.zoom = Math.min(2.5, state.camera.zoom + 0.1);
-  zoomSlider.value = state.camera.zoom.toFixed(2);
+  if (zoomSlider) zoomSlider.value = state.camera.zoom.toFixed(2);
   syncControlLabels();
 });
 
 zoomOutBtn?.addEventListener("click", () => {
   state.camera.zoom = Math.max(0.55, state.camera.zoom - 0.1);
-  zoomSlider.value = state.camera.zoom.toFixed(2);
+  if (zoomSlider) zoomSlider.value = state.camera.zoom.toFixed(2);
   syncControlLabels();
 });
 
 boostStarsBtn?.addEventListener("click", () => {
   const next = Math.min(4000, state.stars.length + 300);
-  starCountSlider.value = String(next);
+  if (starCountSlider) starCountSlider.value = String(next);
   initScene(next, state.particles.length || 260);
   syncControlLabels();
 });
 
 boostParticlesBtn?.addEventListener("click", () => {
   const next = Math.min(1200, state.particles.length + 80);
-  particleCountSlider.value = String(next);
+  if (particleCountSlider) particleCountSlider.value = String(next);
   initScene(state.stars.length || 1400, next);
   syncControlLabels();
 });
@@ -1052,7 +1170,7 @@ canvas.addEventListener("wheel", (e) => {
   e.preventDefault();
   const delta = e.deltaY > 0 ? -0.08 : 0.08;
   state.camera.zoom = Math.max(0.55, Math.min(2.5, state.camera.zoom + delta));
-  zoomSlider.value = state.camera.zoom.toFixed(2);
+  if (zoomSlider) zoomSlider.value = state.camera.zoom.toFixed(2);
   syncControlLabels();
 }, { passive: false });
 
@@ -1062,10 +1180,27 @@ canvas.addEventListener("wheel", (e) => {
 window.addEventListener("resize", resizeCanvas);
 
 homeCards.forEach((card) => {
-  card.addEventListener("click", () => {
+  card.addEventListener("click", async () => {
     const view = card.dataset.openView;
     showApp(view);
     aiMessage(`Opened ${view}.`);
+
+    if (view === "archive") {
+      try {
+        const volumes = await fetchVolumeList();
+        renderVolumeList(volumes);
+        archiveContent.textContent = volumes.length
+          ? "Click a volume to load its full stored data."
+          : "No mapped volumes yet. Run process or upload all first.";
+      } catch (error) {
+        archiveContent.textContent = `Failed to load archive list: ${error.message}`;
+      }
+    }
+
+    if (view === "diagnostics") {
+      await runHealthCheck();
+      await runEngineStatus();
+    }
   });
 });
 
@@ -1080,7 +1215,18 @@ navItems.forEach((button) => {
 
     showApp(module);
 
-    if (module === "archive") await runProcessVolume(2);
+    if (module === "archive") {
+      try {
+        const volumes = await fetchVolumeList();
+        renderVolumeList(volumes);
+        archiveContent.textContent = volumes.length
+          ? "Click a volume to load its full stored data."
+          : "No mapped volumes yet. Run process or upload all first.";
+      } catch (error) {
+        archiveContent.textContent = `Failed to load archive list: ${error.message}`;
+      }
+    }
+
     if (module === "diagnostics") {
       await runHealthCheck();
       await runEngineStatus();
