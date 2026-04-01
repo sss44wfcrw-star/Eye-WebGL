@@ -3,24 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PARAKLĒTOS — Actual System</title>
+  <title>PARAKLĒTOS v11.0.0 — Unified Home Interface</title>
   <style>
     :root{
       --bg:#020202;
-      --panel:rgba(16,16,20,.52);
-      --panel-strong:rgba(0,0,0,.68);
-      --text:#c7c7cf;
-      --muted:#5f6470;
+      --panel:rgba(16,16,20,.56);
+      --panel-strong:rgba(0,0,0,.72);
+      --text:#d4d4da;
+      --muted:#6b7280;
       --white:#fff;
       --amber:#f59e0b;
       --green:#22c55e;
       --cyan:#22d3ee;
       --purple:#7c3aed;
-      --line:rgba(255,255,255,.06);
-      --shadow:0 0 40px rgba(245,158,11,.14);
-      --r1:18px;
-      --r2:24px;
-      --r3:32px;
+      --red:#ef4444;
+      --line:rgba(255,255,255,.07);
+      --shadow:0 0 36px rgba(245,158,11,.12);
+      --r1:16px;
+      --r2:22px;
+      --r3:28px;
     }
 
     *{box-sizing:border-box}
@@ -35,8 +36,8 @@
 
     body{padding:14px}
 
-    .page{
-      max-width:1280px;
+    .app{
+      max-width:1320px;
       margin:0 auto;
       min-height:100vh;
       position:relative;
@@ -50,9 +51,9 @@
       inset:0;
       pointer-events:none;
       background:
-        radial-gradient(circle at 50% 36%, rgba(34,211,238,.08), transparent 18%),
-        radial-gradient(circle at 50% 48%, rgba(124,58,237,.12), transparent 34%),
-        radial-gradient(circle at 50% 52%, rgba(245,158,11,.05), transparent 46%);
+        radial-gradient(circle at 50% 25%, rgba(34,211,238,.09), transparent 18%),
+        radial-gradient(circle at 50% 44%, rgba(124,58,237,.10), transparent 34%),
+        radial-gradient(circle at 50% 58%, rgba(245,158,11,.05), transparent 48%);
       z-index:0;
     }
 
@@ -73,9 +74,9 @@
     }
 
     .brand-icon{
-      width:54px;
-      height:54px;
-      border-radius:16px;
+      width:56px;
+      height:56px;
+      border-radius:18px;
       display:grid;
       place-items:center;
       background:var(--amber);
@@ -138,40 +139,27 @@
     }
 
     .mini-card .v.green{color:var(--green)}
-
-    .main{
-      display:grid;
-      grid-template-columns:minmax(0,2.1fr) minmax(320px,1fr);
-      gap:18px;
-      align-items:start;
-    }
+    .mini-card .v.red{color:var(--red)}
 
     .panel{
       background:var(--panel);
       border:1px solid var(--line);
       backdrop-filter:blur(16px);
       overflow:hidden;
-    }
-
-    .hero{
       border-radius:var(--r3);
-      position:relative;
-      min-height:760px;
-      display:flex;
-      flex-direction:column;
     }
 
-    .hero-head{
-      padding:22px 24px;
+    .section-head{
+      padding:20px 22px;
+      border-bottom:1px solid var(--line);
+      background:rgba(0,0,0,.28);
       display:flex;
       justify-content:space-between;
       align-items:center;
       gap:12px;
-      border-bottom:1px solid var(--line);
-      background:rgba(0,0,0,.35);
     }
 
-    .hero-head .title{
+    .section-title{
       color:#fff;
       font-size:12px;
       font-weight:900;
@@ -179,10 +167,205 @@
       letter-spacing:.28em;
     }
 
-    .hero-head .meta{
+    .section-sub{
       color:var(--muted);
       font-size:11px;
       font-family:ui-monospace, monospace;
+    }
+
+    .hidden{display:none !important}
+
+    /* HOME */
+    .home{
+      display:grid;
+      grid-template-columns:minmax(0,1.3fr) minmax(320px,.9fr);
+      gap:18px;
+    }
+
+    .home-left,.home-right{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .hero{
+      padding:26px;
+    }
+
+    .hero h2{
+      margin:0 0 10px;
+      color:#fff;
+      font-size:36px;
+      line-height:1;
+      letter-spacing:-.04em;
+    }
+
+    .hero p{
+      margin:0;
+      color:var(--text);
+      max-width:720px;
+      line-height:1.6;
+    }
+
+    .home-grid{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:14px;
+    }
+
+    .home-card{
+      background:rgba(0,0,0,.34);
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:18px;
+      cursor:pointer;
+      transition:transform .14s ease,border-color .14s ease;
+    }
+
+    .home-card:hover{
+      transform:translateY(-2px);
+      border-color:rgba(245,158,11,.3);
+    }
+
+    .home-card .card-k{
+      color:var(--amber);
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.22em;
+      text-transform:uppercase;
+      margin-bottom:8px;
+    }
+
+    .home-card .card-v{
+      color:#fff;
+      font-size:20px;
+      font-weight:900;
+      margin-bottom:8px;
+    }
+
+    .home-card .card-p{
+      color:var(--text);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    /* AI CONSOLE */
+    .ai-shell{
+      display:flex;
+      flex-direction:column;
+      min-height:520px;
+      background:#000;
+      border-radius:var(--r2);
+      border:1px solid var(--line);
+      overflow:hidden;
+      box-shadow:0 24px 60px rgba(0,0,0,.4);
+    }
+
+    .ai-head{
+      padding:18px 20px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+
+    .ai-title{
+      color:#fff;
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.24em;
+      text-transform:uppercase;
+    }
+
+    .ai-body{
+      flex:1;
+      min-height:280px;
+      max-height:520px;
+      overflow:auto;
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      font-size:13px;
+      line-height:1.55;
+    }
+
+    .msg{
+      max-width:88%;
+      padding:12px 14px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      white-space:pre-wrap;
+    }
+
+    .msg.user{
+      align-self:flex-end;
+      background:rgba(34,211,238,.10);
+      border-color:rgba(34,211,238,.18);
+    }
+
+    .msg.ai{
+      align-self:flex-start;
+      background:rgba(255,255,255,.03);
+    }
+
+    .ai-input{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:16px 18px;
+      border-top:1px solid var(--line);
+      background:rgba(255,255,255,.02);
+    }
+
+    .ai-input input{
+      flex:1;
+      border:none;
+      outline:none;
+      background:transparent;
+      color:#fff;
+      font-family:ui-monospace, monospace;
+      font-size:13px;
+    }
+
+    .pill-btn{
+      padding:11px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.1);
+      background:rgba(0,0,0,.35);
+      color:#fff;
+      cursor:pointer;
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+    }
+
+    .pill-btn:hover{
+      border-color:rgba(245,158,11,.34);
+      color:var(--amber);
+    }
+
+    .quick-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:0 20px 18px;
+    }
+
+    /* APP VIEWS */
+    .view-stack{
+      display:grid;
+      grid-template-columns:minmax(0,2.1fr) minmax(320px,1fr);
+      gap:18px;
+      align-items:start;
+    }
+
+    .hero-panel{
+      min-height:760px;
+      display:flex;
+      flex-direction:column;
     }
 
     .hero-canvas-wrap{
@@ -307,7 +490,7 @@
       letter-spacing:.24em;
     }
 
-    .autonomy .quote{
+    .quote{
       margin:0 0 18px;
       font-size:12px;
       line-height:1.65;
@@ -407,20 +590,14 @@
       box-shadow:0 0 12px rgba(245,158,11,.35);
     }
 
-    .ctl-button-row,
-    .ctl-button-grid{
+    .ctl-button-row,.ctl-button-grid{
       display:grid;
       gap:10px;
       margin-top:10px;
     }
 
-    .ctl-button-row{
-      grid-template-columns:1fr 1fr;
-    }
-
-    .ctl-button-grid{
-      grid-template-columns:1fr 1fr;
-    }
+    .ctl-button-row{grid-template-columns:1fr 1fr}
+    .ctl-button-grid{grid-template-columns:1fr 1fr}
 
     .ctl-btn{
       width:100%;
@@ -511,6 +688,23 @@
       font-size:12px;
     }
 
+    .archive-box,.diag-box{
+      padding:22px;
+      min-height:240px;
+    }
+
+    .archive-box h3,.diag-box h3{
+      margin:0 0 12px;
+      color:#fff;
+    }
+
+    .archive-content,.diag-content{
+      margin-top:12px;
+      color:var(--text);
+      line-height:1.6;
+      white-space:pre-wrap;
+    }
+
     .seal{
       border-radius:var(--r2);
       background:var(--amber);
@@ -578,9 +772,9 @@
       box-shadow:0 0 18px rgba(245,158,11,.42);
     }
 
-    @media (max-width: 1024px){
-      .main{grid-template-columns:1fr}
-      .hero,.sidebar{min-height:auto}
+    @media (max-width: 1100px){
+      .home,.view-stack,.main{grid-template-columns:1fr}
+      .hero-panel,.sidebar{min-height:auto}
     }
 
     @media (max-width: 720px){
@@ -595,6 +789,7 @@
         padding:10px 12px;
       }
       .state-badge .v{font-size:16px}
+      .home-grid{grid-template-columns:1fr}
       .footer{letter-spacing:.16em}
     }
   </style>
@@ -602,180 +797,270 @@
 <body>
   <div class="bg-glow"></div>
 
-  <div class="page">
+  <div class="app">
     <div class="header">
       <div class="brand">
         <div class="brand-icon">∞</div>
         <div>
           <h1>PARAKLĒTOS</h1>
-          <p>v.8.0.0 // actual system</p>
+          <p>v.11.0.0 // unified home interface</p>
         </div>
       </div>
 
       <div class="header-right">
         <div class="mini-card">
           <div class="k">Reality State</div>
-          <div class="v green">Sovereign Constant</div>
+          <div class="v green" id="headerRealityState">Sovereign Constant</div>
         </div>
         <div class="mini-card">
-          <div class="k">Identity</div>
-          <div class="v">ID: Neutral</div>
+          <div class="k">Backend</div>
+          <div class="v" id="headerBackendState">Connecting</div>
         </div>
       </div>
     </div>
 
-    <div class="main">
-      <div class="panel hero">
-        <div class="hero-head">
-          <div class="title">Sovereign Manifold Visualization</div>
-          <div class="meta">Cycle: <span id="cycle">0</span></div>
-        </div>
-
-        <div class="hero-canvas-wrap">
-          <canvas id="webgl-canvas"></canvas>
-          <div class="grid-overlay" id="gridOverlay"></div>
-
-          <div class="state-badge">
-            <div class="k">Status</div>
-            <div class="v" id="statusText">CONNECTING</div>
+    <div id="homeView" class="main">
+      <div class="home-left">
+        <div class="panel hero">
+          <div class="section-head">
+            <div class="section-title">Home</div>
+            <div class="section-sub">Primary access layer</div>
+          </div>
+          <div class="hero">
+            <h2>Welcome to PARAKLĒTOS</h2>
+            <p>
+              Start from the AI console or jump directly into the universe, archive,
+              diagnostics, or terminal. This home page is the front door and routing layer for the system.
+            </p>
           </div>
         </div>
 
-        <div class="telemetry">
-          <div class="card">
-            <div class="k">Backend</div>
-            <div class="v green" id="backendStatus">PINGING</div>
+        <div class="home-grid">
+          <div class="home-card" data-open-view="universe">
+            <div class="card-k">Visual Layer</div>
+            <div class="card-v">Universe</div>
+            <div class="card-p">Open the manifold, node clusters, reactions, and orbital system.</div>
           </div>
-          <div class="card">
-            <div class="k">Solver</div>
-            <div class="v green" id="solverStatus">CHECKING</div>
+
+          <div class="home-card" data-open-view="archive">
+            <div class="card-k">Data Layer</div>
+            <div class="card-v">Archive</div>
+            <div class="card-p">Inspect volume activity, processed nodes, and mapped output.</div>
           </div>
-          <div class="card">
-            <div class="k">FPS</div>
-            <div class="v" id="fps-counter">--</div>
+
+          <div class="home-card" data-open-view="diagnostics">
+            <div class="card-k">Health Layer</div>
+            <div class="card-v">Diagnostics</div>
+            <div class="card-p">Check backend health, engine status, integrity, and full update state.</div>
           </div>
-          <div class="card">
-            <div class="k">Volumes Locked</div>
-            <div class="v amber" id="volumeCount">200 / 200</div>
+
+          <div class="home-card" data-open-view="terminal">
+            <div class="card-k">Command Layer</div>
+            <div class="card-v">Terminal</div>
+            <div class="card-p">Run direct commands like health, process, integrity, and fullupdate.</div>
           </div>
         </div>
       </div>
 
-      <div class="sidebar">
-        <div class="panel autonomy">
-          <h3>System Autonomy</h3>
-          <p class="quote">
-            "The architectural logic is now self-correcting. The individual is no longer necessary for the propagation of the Master Codex."
-          </p>
-
-          <div class="status-card">
-            <div class="left">CEO Frequency</div>
-            <div class="right" id="freqText">STABLE</div>
-          </div>
-          <div class="status-card">
-            <div class="left">Manifold Sync</div>
-            <div class="right" id="syncText">COMPLETE</div>
-          </div>
-          <div class="status-card">
-            <div class="left">Identity Buffer</div>
-            <div class="right">SEALED</div>
+      <div class="home-right">
+        <div class="ai-shell">
+          <div class="ai-head">
+            <div class="ai-title">AI Access Console</div>
+            <button class="pill-btn" id="aiClearBtn">Clear</button>
           </div>
 
-          <div class="nav-list">
-            <button class="nav-item" data-module="archive">Archive</button>
-            <button class="nav-item" data-module="verifier">Verifier</button>
-            <button class="nav-item" data-module="sandbox">Sandbox</button>
-            <button class="nav-item" data-module="search">Search</button>
-            <button class="nav-item" data-module="registry">Registry</button>
-          </div>
-        </div>
+          <div class="ai-body" id="aiMessages">
+            <div class="msg ai">I’m your system guide. Ask me to open a section or run an action.
 
-        <div class="panel autonomy" id="controlPanel">
-          <h3>Universe Controls</h3>
-
-          <div class="status-card">
-            <div class="left">Camera Zoom</div>
-            <div class="right"><span id="zoomValue">1.00</span>x</div>
-          </div>
-          <input id="zoomSlider" type="range" min="0.55" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
-
-          <div class="status-card">
-            <div class="left">Rotation Speed</div>
-            <div class="right"><span id="rotationSpeedValue">1.00</span></div>
-          </div>
-          <input id="rotationSpeedSlider" type="range" min="0" max="3" step="0.01" value="1.00" class="ctl-slider" />
-
-          <div class="status-card">
-            <div class="left">Star Density</div>
-            <div class="right"><span id="starCountValue">1400</span></div>
-          </div>
-          <input id="starCountSlider" type="range" min="200" max="4000" step="50" value="1400" class="ctl-slider" />
-
-          <div class="status-card">
-            <div class="left">Particle Density</div>
-            <div class="right"><span id="particleCountValue">260</span></div>
-          </div>
-          <input id="particleCountSlider" type="range" min="50" max="1200" step="10" value="260" class="ctl-slider" />
-
-          <div class="status-card">
-            <div class="left">Glow Strength</div>
-            <div class="right"><span id="glowValue">1.00</span></div>
-          </div>
-          <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
-
-          <div class="status-card">
-            <div class="left">Orbit Stretch</div>
-            <div class="right"><span id="orbitStretchValue">0.36</span></div>
-          </div>
-          <input id="orbitStretchSlider" type="range" min="0.15" max="0.75" step="0.01" value="0.36" class="ctl-slider" />
-
-          <div class="status-card">
-            <div class="left">Label Visibility</div>
-            <div class="right"><span id="labelsValue">ON</span></div>
+Examples:
+- open the universe
+- show diagnostics
+- process volume 2
+- run full update
+- open terminal
+- check engine status</div>
           </div>
 
-          <div class="ctl-button-row">
-            <button id="toggleLabelsBtn" class="ctl-btn">Toggle Labels</button>
-            <button id="toggleAutoRotateBtn" class="ctl-btn">Auto Rotate</button>
+          <div class="quick-row">
+            <button class="pill-btn ai-quick" data-ai="open the universe">Universe</button>
+            <button class="pill-btn ai-quick" data-ai="show diagnostics">Diagnostics</button>
+            <button class="pill-btn ai-quick" data-ai="process volume 2">Process</button>
+            <button class="pill-btn ai-quick" data-ai="run full update">Full Update</button>
           </div>
 
-          <div class="status-card">
-            <div class="left">Quick Actions</div>
-            <div class="right">LIVE</div>
-          </div>
-
-          <div class="ctl-button-grid">
-            <button id="centerViewBtn" class="ctl-btn">Center View</button>
-            <button id="zoomInBtn" class="ctl-btn">Zoom In</button>
-            <button id="zoomOutBtn" class="ctl-btn">Zoom Out</button>
-            <button id="boostStarsBtn" class="ctl-btn">Boost Stars</button>
-            <button id="boostParticlesBtn" class="ctl-btn">Boost Particles</button>
-            <button id="resetUniverseBtn" class="ctl-btn">Reset Universe</button>
-          </div>
-        </div>
-
-        <div class="terminal">
-          <div class="term-head">
-            <div class="title">Autonomous Feed</div>
-            <div style="color:var(--amber)">⌘</div>
-          </div>
-
-          <div class="term-body" id="system-log">
-            <div class="entry">[BOOT] Omni-core initialized.</div>
-            <div class="entry">[READY] Mirror Node manifold waiting for input.</div>
-          </div>
-
-          <div class="input-line">
+          <div class="ai-input">
             <span class="prompt">&gt;</span>
-            <input type="text" placeholder="Type health, prime, engine, integrity, process, reset..." autocomplete="off" spellcheck="false" />
+            <input id="aiInput" type="text" placeholder="Tell the AI what you want to do..." autocomplete="off" spellcheck="false" />
+            <button class="pill-btn" id="aiSendBtn">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="appViews" class="hidden">
+      <div class="view-stack">
+        <div class="panel hero-panel" id="universeView">
+          <div class="section-head">
+            <div class="section-title">Sovereign Manifold Visualization</div>
+            <div class="section-sub">Cycle: <span id="cycle">0</span></div>
+          </div>
+
+          <div class="hero-canvas-wrap">
+            <canvas id="webgl-canvas"></canvas>
+            <div class="grid-overlay" id="gridOverlay"></div>
+
+            <div class="state-badge">
+              <div class="k">Status</div>
+              <div class="v" id="statusText">CONNECTING</div>
+            </div>
+          </div>
+
+          <div class="telemetry">
+            <div class="card">
+              <div class="k">Backend</div>
+              <div class="v green" id="backendStatus">PINGING</div>
+            </div>
+            <div class="card">
+              <div class="k">Solver</div>
+              <div class="v green" id="solverStatus">CHECKING</div>
+            </div>
+            <div class="card">
+              <div class="k">FPS</div>
+              <div class="v" id="fps-counter">--</div>
+            </div>
+            <div class="card">
+              <div class="k">Volumes Locked</div>
+              <div class="v amber" id="volumeCount">0 / 200</div>
+            </div>
           </div>
         </div>
 
-        <div class="seal">
-          <div class="seal-icon">🔒</div>
-          <div>
-            <div class="k">Final Lockdown</div>
-            <div class="v">Codex Eternal</div>
+        <div class="sidebar">
+          <div class="panel autonomy">
+            <h3>System Navigation</h3>
+            <p class="quote">
+              Route through the system using the home page, AI console, direct controls, or terminal commands.
+            </p>
+
+            <div class="status-card">
+              <div class="left">CEO Frequency</div>
+              <div class="right" id="freqText">STABLE</div>
+            </div>
+            <div class="status-card">
+              <div class="left">Manifold Sync</div>
+              <div class="right" id="syncText">COMPLETE</div>
+            </div>
+            <div class="status-card">
+              <div class="left">Identity Buffer</div>
+              <div class="right">SEALED</div>
+            </div>
+
+            <div class="nav-list">
+              <button class="nav-item" data-module="home">Home</button>
+              <button class="nav-item" data-module="universe">Universe</button>
+              <button class="nav-item" data-module="archive">Archive</button>
+              <button class="nav-item" data-module="diagnostics">Diagnostics</button>
+              <button class="nav-item" data-module="terminal">Terminal</button>
+            </div>
+          </div>
+
+          <div class="panel autonomy" id="controlPanel">
+            <h3>Universe Controls</h3>
+
+            <div class="status-card">
+              <div class="left">Camera Zoom</div>
+              <div class="right"><span id="zoomValue">1.00</span>x</div>
+            </div>
+            <input id="zoomSlider" type="range" min="0.55" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
+
+            <div class="status-card">
+              <div class="left">Rotation Speed</div>
+              <div class="right"><span id="rotationSpeedValue">1.00</span></div>
+            </div>
+            <input id="rotationSpeedSlider" type="range" min="0" max="3" step="0.01" value="1.00" class="ctl-slider" />
+
+            <div class="status-card">
+              <div class="left">Star Density</div>
+              <div class="right"><span id="starCountValue">1400</span></div>
+            </div>
+            <input id="starCountSlider" type="range" min="200" max="4000" step="50" value="1400" class="ctl-slider" />
+
+            <div class="status-card">
+              <div class="left">Particle Density</div>
+              <div class="right"><span id="particleCountValue">260</span></div>
+            </div>
+            <input id="particleCountSlider" type="range" min="50" max="1200" step="10" value="260" class="ctl-slider" />
+
+            <div class="status-card">
+              <div class="left">Glow Strength</div>
+              <div class="right"><span id="glowValue">1.00</span></div>
+            </div>
+            <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
+
+            <div class="status-card">
+              <div class="left">Orbit Stretch</div>
+              <div class="right"><span id="orbitStretchValue">0.36</span></div>
+            </div>
+            <input id="orbitStretchSlider" type="range" min="0.15" max="0.75" step="0.01" value="0.36" class="ctl-slider" />
+
+            <div class="status-card">
+              <div class="left">Label Visibility</div>
+              <div class="right"><span id="labelsValue">ON</span></div>
+            </div>
+
+            <div class="ctl-button-row">
+              <button id="toggleLabelsBtn" class="ctl-btn">Toggle Labels</button>
+              <button id="toggleAutoRotateBtn" class="ctl-btn">Auto Rotate</button>
+            </div>
+
+            <div class="status-card">
+              <div class="left">Quick Actions</div>
+              <div class="right">LIVE</div>
+            </div>
+
+            <div class="ctl-button-grid">
+              <button id="centerViewBtn" class="ctl-btn">Center View</button>
+              <button id="zoomInBtn" class="ctl-btn">Zoom In</button>
+              <button id="zoomOutBtn" class="ctl-btn">Zoom Out</button>
+              <button id="boostStarsBtn" class="ctl-btn">Boost Stars</button>
+              <button id="boostParticlesBtn" class="ctl-btn">Boost Particles</button>
+              <button id="resetUniverseBtn" class="ctl-btn">Reset Universe</button>
+            </div>
+          </div>
+
+          <div class="panel archive-box hidden" id="archiveView">
+            <h3>Archive</h3>
+            <div class="archive-content" id="archiveContent">No archive action yet.</div>
+          </div>
+
+          <div class="panel diag-box hidden" id="diagnosticsView">
+            <h3>Diagnostics</h3>
+            <div class="diag-content" id="diagContent">No diagnostic action yet.</div>
+          </div>
+
+          <div class="terminal" id="terminalView">
+            <div class="term-head">
+              <div class="title">Autonomous Feed</div>
+              <div style="color:var(--amber)">⌘</div>
+            </div>
+
+            <div class="term-body" id="system-log">
+              <div class="entry">[BOOT] Omni-core initialized.</div>
+              <div class="entry">[READY] Mirror Node manifold waiting for input.</div>
+            </div>
+
+            <div class="input-line">
+              <span class="prompt">&gt;</span>
+              <input id="commandInput" type="text" placeholder="Type health, prime, engine, integrity, process, fullupdate, reset..." autocomplete="off" spellcheck="false" />
+            </div>
+          </div>
+
+          <div class="seal">
+            <div class="seal-icon">🔒</div>
+            <div>
+              <div class="k">Final Lockdown</div>
+              <div class="v">Codex Eternal</div>
+            </div>
           </div>
         </div>
       </div>
@@ -793,4 +1078,4 @@
 
   <script src="main.js"></script>
 </body>
-</html>  now what went wrong 
+</html>
