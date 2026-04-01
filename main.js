@@ -61,7 +61,7 @@ if (!canvas || !ctx || !fpsCounter || !systemLog || !commandInput) {
 
 /* build grid overlay */
 if (gridOverlay && gridOverlay.children.length === 0) {
-  for (let i = 0; i < 192; i++) {
+  for (let i = 0; i < 192; i += 1) {
     const cell = document.createElement("div");
     gridOverlay.appendChild(cell);
   }
@@ -111,7 +111,15 @@ const state = {
     { name: "Venus", radius: 130, speed: 0.015, size: 3, color: "#eebb00", angle: Math.random() * Math.PI * 2 },
     { name: "Earth", radius: 180, speed: 0.010, size: 3.5, color: "#0088ff", angle: Math.random() * Math.PI * 2 },
     { name: "Mars", radius: 245, speed: 0.008, size: 2.5, color: "#ff4400", angle: Math.random() * Math.PI * 2 }
-  ]
+  ],
+
+  /* reaction state */
+  universePulse: 1,
+  reactionBursts: [],
+  mappedVolumes: 0,
+  integrityLevel: 0,
+  resonanceBoost: 1,
+  nodeClusters: []
 };
 
 /* ===========================
@@ -129,7 +137,10 @@ function resizeCanvas() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 
-function initScene(starCount = Number(starCountSlider?.value || 1400), particleCount = Number(particleCountSlider?.value || 260)) {
+function initScene(
+  starCount = Number(starCountSlider?.value || 1400),
+  particleCount = Number(particleCountSlider?.value || 260)
+) {
   state.stars = Array.from({ length: starCount }, () => ({
     x: Math.random(),
     y: Math.random(),
@@ -155,6 +166,77 @@ function syncControlLabels() {
   if (glowValue) glowValue.textContent = state.glowStrength.toFixed(2);
   if (orbitStretchValue) orbitStretchValue.textContent = state.orbitStretch.toFixed(2);
   if (labelsValue) labelsValue.textContent = state.showLabels ? "ON" : "OFF";
+}
+
+function spawnReactionBurst(x, y, amount = 18, color = "0,255,204") {
+  for (let i = 0; i < amount; i += 1) {
+    state.reactionBursts.push({
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      life: 1,
+      decay: 0.015 + Math.random() * 0.02,
+      size: 1 + Math.random() * 4,
+      color
+    });
+  }
+}
+
+function spawnVolumeCluster(volumeNumber = 1) {
+  const angle = Math.random() * Math.PI * 2;
+  const radius = 120 + volumeNumber * 12;
+
+  state.nodeClusters.push({
+    volume: volumeNumber,
+    angle,
+    radius,
+    orbitSpeed: 0.002 + Math.random() * 0.003,
+    size: 5 + Math.min(14, volumeNumber * 0.2),
+    alpha: 0.75,
+    color: volumeNumber % 2 === 0 ? "#22d3ee" : "#f59e0b"
+  });
+
+  if (state.nodeClusters.length > 200) {
+    state.nodeClusters.shift();
+  }
+}
+
+function reactToMappedVolumes(count) {
+  state.mappedVolumes = count;
+  state.universePulse = Math.min(1.8, 1 + count * 0.08);
+  state.resonanceBoost = Math.min(2.5, 1 + count * 0.05);
+
+  while (state.nodeClusters.length < count) {
+    spawnVolumeCluster(state.nodeClusters.length + 1);
+  }
+
+  if (state.nodeClusters.length > count) {
+    state.nodeClusters.length = count;
+  }
+
+  const cx = width / 2 + state.camera.dragX * 0.15;
+  const cy = height / 2 + state.camera.dragY * 0.15;
+  spawnReactionBurst(cx, cy, 10 + count * 2, "34,211,238");
+}
+
+function reactToIntegrity(events = 0) {
+  state.integrityLevel = events;
+  state.glowStrength = Math.min(2.5, 1 + events * 0.03);
+  const cx = width / 2 + state.camera.dragX * 0.15;
+  const cy = height / 2 + state.camera.dragY * 0.15;
+  spawnReactionBurst(cx, cy, 16, "245,158,11");
+}
+
+function reactToFullUpdate() {
+  state.autoRotate = true;
+  state.glowStrength = Math.min(2.5, state.glowStrength + 0.35);
+  state.rotationSpeedFactor = Math.min(3, state.rotationSpeedFactor + 0.2);
+  state.universePulse = Math.min(2.2, state.universePulse + 0.25);
+  const cx = width / 2 + state.camera.dragX * 0.15;
+  const cy = height / 2 + state.camera.dragY * 0.15;
+  spawnReactionBurst(cx, cy, 42, "255,220,160");
+  syncControlLabels();
 }
 
 function applyModeVisuals() {
@@ -259,6 +341,8 @@ async function runEngineStatus() {
   try {
     const data = await apiGet("/engine/status");
     if (volumeCount) volumeCount.textContent = `${data.mapped_volumes} / 200`;
+    reactToMappedVolumes(data.mapped_volumes || 0);
+    reactToIntegrity(data.verification_events || 0);
     logEntry(
       `Engine active=${data.active} mapped_volumes=${data.mapped_volumes} uptime=${data.uptime_seconds}s`,
       "ENGINE"
@@ -272,6 +356,8 @@ async function runIntegrityCheck() {
   try {
     const data = await apiGet("/engine/integrity");
     if (volumeCount) volumeCount.textContent = `${data.mapped_volumes} / 200`;
+    reactToMappedVolumes(data.mapped_volumes || 0);
+    reactToIntegrity(data.verification_events || 0);
     logEntry(`${data.message} mapped=${data.mapped_volumes} events=${data.verification_events}`, "CHECK");
   } catch (error) {
     logEntry(`Integrity check failed: ${error.message}`, "ERR");
@@ -288,6 +374,10 @@ async function runProcessVolume() {
     });
 
     if (volumeCount) volumeCount.textContent = `${data.projection.volume} / 200`;
+    reactToMappedVolumes(Math.max(state.mappedVolumes, data.projection.volume || 1));
+    spawnVolumeCluster(data.projection.volume || 1);
+    spawnReactionBurst(width / 2, height / 2, 24, "34,211,238");
+
     logEntry(
       `Volume ${data.volume_id} mapped. resonance=${data.projection.resonance.toFixed(3)} vector=${data.projection.presence_vector.join(",")}`,
       "ARCHIVE"
@@ -318,6 +408,8 @@ async function runFullUpdate() {
       activeMode = "sandbox";
       navItems.forEach((n) => n.classList.remove("active"));
       document.querySelector('.nav-item[data-module="sandbox"]')?.classList.add("active");
+      reactToFullUpdate();
+      reactToMappedVolumes(data.mapped_volumes || state.mappedVolumes || 1);
       applyModeVisuals();
     }
   } catch (error) {
@@ -361,6 +453,13 @@ function handleCommand(raw) {
     state.orbitStretch = 0.36;
     state.rotationSpeedFactor = 1;
 
+    state.reactionBursts = [];
+    state.nodeClusters = [];
+    state.mappedVolumes = 0;
+    state.integrityLevel = 0;
+    state.universePulse = 1;
+    state.resonanceBoost = 1;
+
     if (zoomSlider) zoomSlider.value = "1.00";
     if (rotationSpeedSlider) rotationSpeedSlider.value = "1.00";
     if (starCountSlider) starCountSlider.value = "1400";
@@ -400,7 +499,7 @@ function drawBackground() {
     width * 0.5, height * 0.45, 20,
     width * 0.5, height * 0.5, Math.max(width, height) * 0.6
   );
-  bg.addColorStop(0, `rgba(0, 255, 204, ${0.10 * state.glowStrength})`);
+  bg.addColorStop(0, `rgba(0, 255, 204, ${0.10 * state.glowStrength * state.universePulse})`);
   bg.addColorStop(0.28, "rgba(70, 35, 130, 0.16)");
   bg.addColorStop(0.65, "rgba(8, 10, 18, 0.72)");
   bg.addColorStop(1, "rgba(5, 5, 5, 1)");
@@ -413,7 +512,7 @@ function drawCore(time) {
   const cy = height / 2 + state.camera.dragY * 0.15;
 
   for (let i = 0; i < 4; i += 1) {
-    const radius = (90 + i * 42 + Math.sin(time * 0.001 + i) * 7) * state.camera.zoom;
+    const radius = (90 + i * 42 + Math.sin(time * 0.001 + i) * 7) * state.camera.zoom * state.universePulse;
     const grad = ctx.createRadialGradient(cx, cy, radius * 0.15, cx, cy, radius);
     grad.addColorStop(0, `rgba(255, 220, 160, ${(0.08 - i * 0.012) * state.glowStrength})`);
     grad.addColorStop(0.45, `rgba(0, 255, 204, ${(0.06 - i * 0.010) * state.glowStrength})`);
@@ -426,15 +525,39 @@ function drawCore(time) {
 
   ctx.strokeStyle = "rgba(0,255,204,0.22)";
   ctx.lineWidth = 1.2;
+
   ctx.beginPath();
-  ctx.ellipse(cx, cy, 180 * state.camera.zoom, 70 * state.camera.zoom, state.camera.rotation, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx,
+    cy,
+    180 * state.camera.zoom * state.universePulse,
+    70 * state.camera.zoom * state.universePulse,
+    state.camera.rotation,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.ellipse(cx, cy, 260 * state.camera.zoom, 110 * state.camera.zoom, state.camera.rotation, 0, Math.PI * 2);
+  ctx.ellipse(
+    cx,
+    cy,
+    260 * state.camera.zoom * state.universePulse,
+    110 * state.camera.zoom * state.universePulse,
+    state.camera.rotation,
+    0,
+    Math.PI * 2
+  );
   ctx.stroke();
 
-  const core = ctx.createRadialGradient(cx, cy, 2, cx, cy, 46 * state.camera.zoom * state.glowStrength);
+  const core = ctx.createRadialGradient(
+    cx,
+    cy,
+    2,
+    cx,
+    cy,
+    46 * state.camera.zoom * state.glowStrength
+  );
   core.addColorStop(0, "rgba(255,255,255,0.98)");
   core.addColorStop(0.2, "rgba(255,220,160,0.86)");
   core.addColorStop(0.55, "rgba(0,255,204,0.18)");
@@ -501,7 +624,7 @@ function drawStars(time) {
   }
 }
 
-function drawParticles(time) {
+function drawParticles() {
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
 
@@ -518,7 +641,38 @@ function drawParticles(time) {
   }
 }
 
-function drawPlanets(time) {
+function drawNodeClusters() {
+  const cx = width / 2 + state.camera.dragX * 0.15;
+  const cy = height / 2 + state.camera.dragY * 0.15;
+
+  for (const cluster of state.nodeClusters) {
+    cluster.angle += cluster.orbitSpeed * state.rotationSpeedFactor;
+
+    const x = cx + Math.cos(cluster.angle + state.camera.rotation) * (cluster.radius * state.camera.zoom);
+    const y = cy + Math.sin(cluster.angle + state.camera.rotation) * (cluster.radius * state.camera.zoom * state.orbitStretch);
+
+    ctx.beginPath();
+    ctx.arc(x, y, cluster.size, 0, Math.PI * 2);
+    ctx.fillStyle = cluster.color;
+    ctx.globalAlpha = cluster.alpha;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.beginPath();
+    ctx.arc(x, y, cluster.size + 8, 0, Math.PI * 2);
+    ctx.strokeStyle = `${cluster.color}55`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (state.showLabels) {
+      ctx.fillStyle = "rgba(255,255,255,0.85)";
+      ctx.font = "10px monospace";
+      ctx.fillText(`V${cluster.volume}`, x + 10, y + 3);
+    }
+  }
+}
+
+function drawPlanets() {
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
 
@@ -541,6 +695,25 @@ function drawPlanets(time) {
   }
 }
 
+function drawReactionBursts() {
+  for (let i = state.reactionBursts.length - 1; i >= 0; i -= 1) {
+    const b = state.reactionBursts[i];
+    b.x += b.vx;
+    b.y += b.vy;
+    b.life -= b.decay;
+
+    if (b.life <= 0) {
+      state.reactionBursts.splice(i, 1);
+      continue;
+    }
+
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.size * b.life, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${b.color},${Math.max(0, b.life)})`;
+    ctx.fill();
+  }
+}
+
 function updateFps(now) {
   frameCount += 1;
   if (now - lastFrameTime >= 1000) {
@@ -556,11 +729,14 @@ function render(now) {
   }
 
   updateFps(now);
+  ctx.clearRect(0, 0, width, height);
   drawBackground();
   drawCore(now);
   drawStars(now);
-  drawParticles(now);
-  drawPlanets(now);
+  drawParticles();
+  drawNodeClusters();
+  drawPlanets();
+  drawReactionBursts();
 
   requestAnimationFrame(render);
 }
