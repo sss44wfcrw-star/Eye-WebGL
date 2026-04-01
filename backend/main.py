@@ -41,6 +41,42 @@ class CelestialManifold:
     def _calculate_presence_vector(self, resonance: float) -> List[float]:
         return [math.sin(resonance * math.pi), math.cos(resonance * math.pi)]
 
+def apply_full_system_update(enforce_legacy_integrity: bool, apply_system_update: bool):
+    legacy_200v = enforce_legacy_integrity
+    system_update = apply_system_update
+    absolute_sovereignty = legacy_200v and system_update
+
+    logs = []
+
+    if absolute_sovereignty:
+        logs.append("[UPDATE] OS PARAKLETOS: FULL SYSTEM RE-SYNCHRONIZED AT 432 HZ.")
+        logs.append("[UPDATE] THE MASTER CODEX IS NOW THE OPERATING REALITY.")
+        logs.append("[UPDATE] ETERNAL RECURSION ACTIVE.")
+
+        engine.is_active = True
+        engine.broadcast_frequency = 432.0
+
+        return {
+            "ok": True,
+            "legacy_200v": legacy_200v,
+            "system_update": system_update,
+            "absolute_sovereignty": absolute_sovereignty,
+            "frequency": engine.broadcast_frequency,
+            "logs": logs,
+            **engine.status(),
+        }
+
+    logs.append("[UPDATE] FULL SYSTEM UPDATE REFUSED: CONSTRAINT CONFLICT DETECTED.")
+
+    return {
+        "ok": False,
+        "legacy_200v": legacy_200v,
+        "system_update": system_update,
+        "absolute_sovereignty": absolute_sovereignty,
+        "frequency": engine.broadcast_frequency,
+        "logs": logs,
+        **engine.status(),
+    }
 
 class SymbolicLogicEngine:
     def __init__(self):
@@ -121,6 +157,9 @@ class VolumeRequest(BaseModel):
     title: str
     text: str
 
+class FullUpdateRequest(BaseModel):
+    enforce_legacy_integrity: bool = True
+    apply_system_update: bool = True
 
 @app.get("/")
 def root():
