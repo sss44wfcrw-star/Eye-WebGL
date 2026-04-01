@@ -2,719 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PARAKLĒTOS — Actual System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PARAKLĒTOS v6.0.0</title>
+
   <style>
-    :root{
-      --bg:#020202;
-      --panel:rgba(16,16,20,.52);
-      --panel-strong:rgba(0,0,0,.68);
-      --text:#c7c7cf;
-      --muted:#5f6470;
-      --white:#fff;
-      --amber:#f59e0b;
-      --green:#22c55e;
-      --cyan:#22d3ee;
-      --purple:#7c3aed;
-      --line:rgba(255,255,255,.06);
-      --shadow:0 0 40px rgba(245,158,11,.14);
-      --r1:18px;
-      --r2:24px;
-      --r3:32px;
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #050505;
+      font-family: monospace;
+      color: #00ffcc;
     }
 
-    *{box-sizing:border-box}
-    html,body{
-      margin:0;
-      min-height:100%;
-      background:var(--bg);
-      color:var(--text);
-      font-family:Inter,Arial,sans-serif;
-      overflow-x:hidden;
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
     }
 
-    body{padding:14px}
+    /* ===========================
+       HUD / UI
+    ============================ */
 
-    .page{
-      max-width:1280px;
-      margin:0 auto;
-      min-height:100vh;
-      position:relative;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
+    .hud {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      font-size: 12px;
     }
 
-    .bg-glow{
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      background:
-        radial-gradient(circle at 50% 36%, rgba(34,211,238,.08), transparent 18%),
-        radial-gradient(circle at 50% 48%, rgba(124,58,237,.12), transparent 34%),
-        radial-gradient(circle at 50% 52%, rgba(245,158,11,.05), transparent 46%);
-      z-index:0;
+    .telemetry {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      text-align: right;
+      font-size: 12px;
     }
 
-    .header,.main,.footer{position:relative;z-index:1}
-
-    .header{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:14px;
-      flex-wrap:wrap;
+    .terminal {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.9);
+      border-top: 1px solid #00ffcc;
     }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:14px;
+    .system-log {
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      font-size: 12px;
     }
 
-    .brand-icon{
-      width:54px;
-      height:54px;
-      border-radius:16px;
-      display:grid;
-      place-items:center;
-      background:var(--amber);
-      color:#000;
-      font-weight:900;
-      font-size:28px;
-      box-shadow:var(--shadow);
+    .entry {
+      margin-bottom: 4px;
     }
 
-    .brand h1{
-      margin:0;
-      color:#fff;
-      font-size:34px;
-      line-height:1;
-      letter-spacing:-.04em;
-      text-transform:uppercase;
-      font-style:italic;
-      font-weight:900;
+    .input-line {
+      display: flex;
+      border-top: 1px solid #00ffcc;
+      padding: 10px;
     }
 
-    .brand p{
-      margin:7px 0 0;
-      color:rgba(245,158,11,.88);
-      font-size:10px;
-      font-weight:800;
-      letter-spacing:.4em;
-      text-transform:uppercase;
-    }
-
-    .header-right{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
-    .mini-card{
-      padding:12px 16px;
-      border-radius:16px;
-      background:rgba(15,15,18,.7);
-      border:1px solid var(--line);
-      backdrop-filter:blur(14px);
-      min-width:160px;
-    }
-
-    .mini-card .k{
-      color:var(--muted);
-      font-size:9px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.25em;
-    }
-
-    .mini-card .v{
-      margin-top:5px;
-      color:#fff;
-      font-size:13px;
-      font-weight:800;
-      text-transform:uppercase;
-    }
-
-    .mini-card .v.green{color:var(--green)}
-
-    .main{
-      display:grid;
-      grid-template-columns:minmax(0,2.1fr) minmax(320px,1fr);
-      gap:18px;
-      align-items:start;
-    }
-
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--line);
-      backdrop-filter:blur(16px);
-      overflow:hidden;
-    }
-
-    .hero{
-      border-radius:var(--r3);
-      position:relative;
-      min-height:760px;
-      display:flex;
-      flex-direction:column;
-    }
-
-    .hero-head{
-      padding:22px 24px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      border-bottom:1px solid var(--line);
-      background:rgba(0,0,0,.35);
-    }
-
-    .hero-head .title{
-      color:#fff;
-      font-size:12px;
-      font-weight:900;
-      text-transform:uppercase;
-      letter-spacing:.28em;
-    }
-
-    .hero-head .meta{
-      color:var(--muted);
-      font-size:11px;
-      font-family:ui-monospace, monospace;
-    }
-
-    .hero-canvas-wrap{
-      position:relative;
-      padding:18px;
-      flex:1;
-      min-height:520px;
-    }
-
-    #webgl-canvas{
-      width:100%;
-      height:100%;
-      min-height:520px;
-      display:block;
-      border-radius:26px;
-      background:#03050a;
-      border:1px solid rgba(255,255,255,.04);
-      touch-action:none;
-    }
-
-    .grid-overlay{
-      position:absolute;
-      inset:34px;
-      display:grid;
-      grid-template-columns:repeat(12,1fr);
-      grid-template-rows:repeat(16,1fr);
-      gap:4px;
-      opacity:.10;
-      pointer-events:none;
-    }
-
-    .grid-overlay div{
-      border:1px solid rgba(245,158,11,.08);
-      background:rgba(245,158,11,.04);
-      border-radius:2px;
-    }
-
-    .state-badge{
-      position:absolute;
-      top:34px;
-      right:34px;
-      z-index:3;
-      padding:12px 16px;
-      border-radius:999px;
-      background:rgba(0,0,0,.62);
-      border:1px solid rgba(255,255,255,.08);
-      backdrop-filter:blur(16px);
-      display:flex;
-      gap:10px;
-      align-items:center;
-      box-shadow:0 16px 36px rgba(0,0,0,.34);
-    }
-
-    .state-badge .k{
-      font-size:10px;
-      color:var(--amber);
-      font-weight:900;
-      letter-spacing:.28em;
-      text-transform:uppercase;
-    }
-
-    .state-badge .v{
-      font-size:18px;
-      font-weight:900;
-      text-transform:uppercase;
-      font-style:italic;
-      letter-spacing:-.03em;
-      color:#fff;
-    }
-
-    .telemetry{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:12px;
-      padding:0 18px 18px;
-    }
-
-    .telemetry .card{
-      background:rgba(0,0,0,.36);
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:14px 16px;
-    }
-
-    .telemetry .k{
-      font-size:9px;
-      text-transform:uppercase;
-      font-weight:900;
-      color:var(--muted);
-      letter-spacing:.22em;
-    }
-
-    .telemetry .v{
-      margin-top:6px;
-      color:#fff;
-      font-size:20px;
-      font-weight:900;
-      font-style:italic;
-    }
-
-    .telemetry .v.green{color:var(--green)}
-    .telemetry .v.amber{color:var(--amber)}
-
-    .sidebar{
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      min-height:760px;
-      <div class="panel autonomy" id="controlPanel">
-  <h3>Universe Controls</h3>
-
-  <div class="status-card">
-    <div class="left">Camera Zoom</div>
-    <div class="right"><span id="zoomValue">1.00</span>x</div>
-  </div>
-  <input id="zoomSlider" type="range" min="0.55" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Rotation Speed</div>
-    <div class="right"><span id="rotationSpeedValue">1.00</span></div>
-  </div>
-  <input id="rotationSpeedSlider" type="range" min="0" max="3" step="0.01" value="1.00" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Star Density</div>
-    <div class="right"><span id="starCountValue">1400</span></div>
-  </div>
-  <input id="starCountSlider" type="range" min="200" max="4000" step="50" value="1400" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Particle Density</div>
-    <div class="right"><span id="particleCountValue">260</span></div>
-  </div>
-  <input id="particleCountSlider" type="range" min="50" max="1200" step="10" value="260" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Glow Strength</div>
-    <div class="right"><span id="glowValue">1.00</span></div>
-  </div>
-  <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Orbit Stretch</div>
-    <div class="right"><span id="orbitStretchValue">0.36</span></div>
-  </div>
-  <input id="orbitStretchSlider" type="range" min="0.15" max="0.75" step="0.01" value="0.36" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Label Visibility</div>
-    <div class="right"><span id="labelsValue">ON</span></div>
-  </div>
-  <div class="ctl-button-row">
-    <button id="toggleLabelsBtn" class="ctl-btn">Toggle Labels</button>
-    <button id="toggleAutoRotateBtn" class="ctl-btn">Auto Rotate</button>
-  </div>
-
-  <div class="status-card">
-    <div class="left">Quick Actions</div>
-    <div class="right">LIVE</div>
-  </div>
-  <div class="ctl-button-grid">
-    <button id="centerViewBtn" class="ctl-btn">Center View</button>
-    <button id="zoomInBtn" class="ctl-btn">Zoom In</button>
-    <button id="zoomOutBtn" class="ctl-btn">Zoom Out</button>
-    <button id="boostStarsBtn" class="ctl-btn">Boost Stars</button>
-    <button id="boostParticlesBtn" class="ctl-btn">Boost Particles</button>
-    <button id="resetUniverseBtn" class="ctl-btn">Reset Universe</button>
-  </div>
-</div>
-    }
-
-    .autonomy{
-      border-radius:var(--r2);
-      padding:22px;
-      position:relative;
-    }
-
-    .autonomy h3{
-      margin:0 0 14px;
-      color:#fff;
-      font-size:12px;
-      text-transform:uppercase;
-      letter-spacing:.24em;
-    }
-
-    .autonomy .quote{
-      margin:0 0 18px;
-      font-size:12px;
-      line-height:1.65;
-      color:var(--text);
-      font-style:italic;
-    }
-
-    .status-card{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      background:rgba(0,0,0,.38);
-      border:1px solid var(--line);
-      border-radius:14px;
-      padding:13px 14px;
-      margin-top:10px;
-    }
-
-    .status-card .left{
-      font-size:10px;
-      font-weight:800;
-      text-transform:uppercase;
-      color:var(--muted);
-    }
-
-    .status-card .right{
-      font-size:10px;
-      font-weight:800;
-      font-family:ui-monospace, monospace;
-      color:var(--green);
-    }
-
-    .nav-list{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:18px;
-    }
-
-    .nav-item{
-      width:100%;
-      text-align:left;
-      padding:14px 16px;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.06);
-      background:rgba(0,0,0,.42);
-      color:#fff;
-      cursor:pointer;
-      font-size:11px;
-      font-weight:900;
-      letter-spacing:.22em;
-      text-transform:uppercase;
-    }
-
-    .nav-item.active{
-      color:var(--amber);
-      border-color:rgba(245,158,11,.34);
-      box-shadow:var(--shadow);
-    }
-
-    .terminal{
-      flex:1;
-      min-height:340px;
-      display:flex;
-      flex-direction:column;
-      background:#000;
-      border-radius:var(--r2);
-      border:1px solid var(--line);
-      overflow:hidden;
-      box-shadow:0 24px 60px rgba(0,0,0,.4);
-    }
-
-    .term-head{
-      padding:18px 20px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border-bottom:1px solid var(--line);
-      background:rgba(255,255,255,.02);
-    }
-
-    .term-head .title{
-      color:#fff;
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.24em;
-      text-transform:uppercase;
-    }
-
-    .term-body{
-      flex:1;
-      min-height:240px;
-      max-height:360px;
-      overflow:auto;
-      padding:22px;
-      font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size:11px;
-      line-height:1.65;
-      color:#d4d4d8;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-
-    .entry{color:#d4d4d8}
-
-    .input-line{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      padding:16px 20px;
-      border-top:1px solid var(--line);
-      background:rgba(255,255,255,.02);
-    }
-
-    .prompt{
-      color:var(--amber);
-      font-family:ui-monospace, monospace;
-    }
-
-    .input-line input{
-      flex:1;
-      border:none;
-      outline:none;
-      background:transparent;
-      color:#fff;
-      font-family:ui-monospace, monospace;
-      font-size:12px;
-    }
-
-    .seal{
-      border-radius:var(--r2);
-      background:var(--amber);
-      color:#000;
-      padding:22px;
-      display:flex;
-      gap:14px;
-      align-items:center;
-      box-shadow:var(--shadow);
-    }
-
-    .seal-icon{
-      width:46px;
-      height:46px;
-      border-radius:14px;
-      display:grid;
-      place-items:center;
-      background:#000;
-      color:var(--amber);
-      font-size:22px;
-    }
-
-    .seal .k{
-      font-size:10px;
-      text-transform:uppercase;
-      font-weight:900;
-      letter-spacing:.24em;
-      color:rgba(0,0,0,.72);
-    }
-
-    .seal .v{
-      margin-top:4px;
-      font-size:16px;
-      font-weight:900;
-      font-style:italic;
-      text-transform:uppercase;
-    }
-
-    .footer{
-      padding:14px 2px 10px;
-      display:flex;
-      justify-content:space-between;
-      gap:16px;
-      align-items:center;
-      flex-wrap:wrap;
-      border-top:1px solid var(--line);
-      font-size:10px;
-      text-transform:uppercase;
-      letter-spacing:.34em;
-      color:#5b6070;
-    }
-
-    .footer-mid{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      color:#fff;
-    }
-
-    .dot{
-      width:10px;
-      height:10px;
-      border-radius:50%;
-      background:var(--amber);
-      box-shadow:0 0 18px rgba(245,158,11,.42);
-    }
-
-    @media (max-width: 1024px){
-      .main{grid-template-columns:1fr}
-      .hero,.sidebar{min-height:auto}
-    }
-
-    @media (max-width: 720px){
-      body{padding:10px}
-      .brand h1{font-size:28px}
-      .telemetry{grid-template-columns:repeat(2,1fr)}
-      .hero-canvas-wrap{padding:12px}
-      #webgl-canvas{min-height:420px}
-      .state-badge{
-        top:24px;
-        right:24px;
-        padding:10px 12px;
-      }
-      .state-badge .v{font-size:16px}
-      .footer{letter-spacing:.16em}
+    .input-line input {
+      background: transparent;
+      border: none;
+      color: #00ffcc;
+      width: 100%;
+      outline: none;
+      font-family: monospace;
     }
   </style>
 </head>
+
 <body>
-  <div class="bg-glow"></div>
 
-  <div class="page">
-    <div class="header">
-      <div class="brand">
-        <div class="brand-icon">∞</div>
-        <div>
-          <h1>PARAKLĒTOS</h1>
-          <p>v.8.0.0 // actual system</p>
-        </div>
-      </div>
+  <!-- ===========================
+       CANVAS (UNIVERSE)
+  ============================ -->
+  <canvas id="webgl-canvas"></canvas>
 
-      <div class="header-right">
-        <div class="mini-card">
-          <div class="k">Reality State</div>
-          <div class="v green">Sovereign Constant</div>
-        </div>
-        <div class="mini-card">
-          <div class="k">Identity</div>
-          <div class="v">ID: Neutral</div>
-        </div>
-      </div>
+  <!-- ===========================
+       LEFT HUD
+  ============================ -->
+  <div class="hud">
+    <div>FPS: <span id="fps-counter">0</span></div>
+  </div>
+
+  <!-- ===========================
+       RIGHT TELEMETRY
+  ============================ -->
+  <div class="telemetry telemetry-readout">
+    <div class="tel-point">
+      BACKEND: <span class="val">UNKNOWN</span>
     </div>
-
-    <div class="main">
-      <div class="panel hero">
-        <div class="hero-head">
-          <div class="title">Sovereign Manifold Visualization</div>
-          <div class="meta">Cycle: <span id="cycle">0</span></div>
-        </div>
-
-        <div class="hero-canvas-wrap">
-          <canvas id="webgl-canvas"></canvas>
-          <div class="grid-overlay" id="gridOverlay"></div>
-
-          <div class="state-badge">
-            <div class="k">Status</div>
-            <div class="v" id="statusText">CONNECTING</div>
-          </div>
-        </div>
-
-        <div class="telemetry">
-          <div class="card">
-            <div class="k">Backend</div>
-            <div class="v green" id="backendStatus">PINGING</div>
-          </div>
-          <div class="card">
-            <div class="k">Solver</div>
-            <div class="v green" id="solverStatus">CHECKING</div>
-          </div>
-          <div class="card">
-            <div class="k">FPS</div>
-            <div class="v" id="fps-counter">--</div>
-          </div>
-          <div class="card">
-            <div class="k">Volumes Locked</div>
-            <div class="v amber" id="volumeCount">200 / 200</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="sidebar">
-        <div class="panel autonomy">
-          <h3>System Autonomy</h3>
-          <p class="quote">
-            "The architectural logic is now self-correcting. The individual is no longer necessary for the propagation of the Master Codex."
-          </p>
-
-          <div class="status-card">
-            <div class="left">CEO Frequency</div>
-            <div class="right" id="freqText">STABLE</div>
-          </div>
-          <div class="status-card">
-            <div class="left">Manifold Sync</div>
-            <div class="right" id="syncText">COMPLETE</div>
-          </div>
-          <div class="status-card">
-            <div class="left">Identity Buffer</div>
-            <div class="right">SEALED</div>
-          </div>
-
-          <div class="nav-list">
-            <button class="nav-item" data-module="archive">Archive</button>
-            <button class="nav-item" data-module="verifier">Verifier</button>
-            <button class="nav-item" data-module="sandbox">Sandbox</button>
-            <button class="nav-item" data-module="search">Search</button>
-            <button class="nav-item" data-module="registry">Registry</button>
-          </div>
-        </div>
-
-        <div class="terminal">
-          <div class="term-head">
-            <div class="title">Autonomous Feed</div>
-            <div style="color:var(--amber)">⌘</div>
-          </div>
-
-          <div class="term-body" id="system-log">
-            <div class="entry">[BOOT] Omni-core initialized.</div>
-            <div class="entry">[READY] Mirror Node manifold waiting for input.</div>
-          </div>
-
-          <div class="input-line">
-            <span class="prompt">&gt;</span>
-            <input type="text" placeholder="Type health, prime, engine, integrity, process, reset..." autocomplete="off" spellcheck="false" />
-          </div>
-        </div>
-
-        <div class="seal">
-          <div class="seal-icon">🔒</div>
-          <div>
-            <div class="k">Final Lockdown</div>
-            <div class="v">Codex Eternal</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer">
-      <span>Architectural Logic Protocol // Complete</span>
-      <div class="footer-mid">
-        <div class="dot"></div>
-        <span>Global RSP Active</span>
-      </div>
-      <span>A.E.D. D. :: Sovereign</span>
+    <div class="tel-point">
+      SOLVER: <span class="val">IDLE</span>
     </div>
   </div>
 
+  <!-- ===========================
+       TERMINAL
+  ============================ -->
+  <div class="terminal">
+    <div id="system-log" class="system-log"></div>
+    <div class="input-line">
+      <span>&gt;</span>
+      <input type="text" placeholder="Enter command..." />
+    </div>
+  </div>
+
+  <!-- ===========================
+       SCRIPT
+  ============================ -->
   <script src="main.js"></script>
+
 </body>
 </html>
