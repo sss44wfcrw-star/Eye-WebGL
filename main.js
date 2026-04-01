@@ -83,7 +83,7 @@ const boostParticlesBtn = document.getElementById("boostParticlesBtn");
 const resetUniverseBtn = document.getElementById("resetUniverseBtn");
 
 if (!canvas || !ctx || !systemLog || !commandInput) {
-  throw new Error("Required DOM elements are missing.");
+  console.error("Required DOM elements are missing.");
 }
 
 if (gridOverlay && gridOverlay.children.length === 0) {
@@ -95,6 +95,7 @@ if (gridOverlay && gridOverlay.children.length === 0) {
 
 /* helpers */
 function logEntry(message, kind = "INFO") {
+  if (!systemLog) return;
   const line = document.createElement("div");
   line.className = "entry";
   line.textContent = `[${kind}] ${message}`;
@@ -103,6 +104,7 @@ function logEntry(message, kind = "INFO") {
 }
 
 function aiMessage(text, who = "ai") {
+  if (!aiMessages) return;
   const div = document.createElement("div");
   div.className = `msg ${who}`;
   div.textContent = text;
@@ -157,45 +159,49 @@ const state = {
 
 /* view routing */
 function showHome() {
+  if (!homeView || !appViews) return;
   homeView.classList.remove("hidden");
   appViews.classList.add("hidden");
 }
 
 function showApp(view = "universe") {
+  if (!homeView || !appViews) return;
+
   homeView.classList.add("hidden");
   appViews.classList.remove("hidden");
 
-  archiveView.classList.add("hidden");
-  diagnosticsView.classList.add("hidden");
-  terminalView.classList.add("hidden");
-  architectureView.classList.add("hidden");
+  archiveView?.classList.add("hidden");
+  diagnosticsView?.classList.add("hidden");
+  terminalView?.classList.add("hidden");
+  architectureView?.classList.add("hidden");
 
   navItems.forEach((n) => n.classList.remove("active"));
 
   if (view === "archive") {
-    archiveView.classList.remove("hidden");
-    terminalView.classList.remove("hidden");
+    archiveView?.classList.remove("hidden");
+    terminalView?.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="archive"]')?.classList.add("active");
   } else if (view === "diagnostics") {
-    diagnosticsView.classList.remove("hidden");
-    terminalView.classList.remove("hidden");
+    diagnosticsView?.classList.remove("hidden");
+    terminalView?.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="diagnostics"]')?.classList.add("active");
   } else if (view === "terminal") {
-    terminalView.classList.remove("hidden");
+    terminalView?.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="terminal"]')?.classList.add("active");
   } else if (view === "architecture") {
-    architectureView.classList.remove("hidden");
-    terminalView.classList.remove("hidden");
+    architectureView?.classList.remove("hidden");
+    terminalView?.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="architecture"]')?.classList.add("active");
     runMasterFIC();
   } else {
-    terminalView.classList.remove("hidden");
+    terminalView?.classList.remove("hidden");
     document.querySelector('.nav-item[data-module="universe"]')?.classList.add("active");
   }
 }
 
 /* canvas setup */
 function resizeCanvas() {
+  if (!canvas || !ctx) return;
   const rect = canvas.getBoundingClientRect();
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
@@ -398,6 +404,8 @@ function renderVolumeList(volumes = []) {
 }
 
 async function loadVolumeDetail(volumeId) {
+  if (!archiveContent) return;
+
   try {
     archiveContent.textContent = `Loading Volume ${volumeId}...`;
     const data = await fetchVolumeById(volumeId);
@@ -425,24 +433,24 @@ ${data.text || "[No stored text found]"}`;
 /* diagnostics */
 async function runHealthCheck() {
   logEntry("Initiating backend diagnostics...", "REQ");
-  backendStatus.textContent = "PINGING";
-  solverStatus.textContent = "CHECKING";
-  headerBackendState.textContent = "Connecting";
-  headerBackendState.className = "v";
+  if (backendStatus) backendStatus.textContent = "PINGING";
+  if (solverStatus) solverStatus.textContent = "CHECKING";
+  if (headerBackendState) headerBackendState.textContent = "Connecting";
+  if (headerBackendState) headerBackendState.className = "v";
 
   try {
     const data = await apiGet("/health");
 
-    backendStatus.textContent = (data.status || "online").toUpperCase();
-    solverStatus.textContent = (data.logic_state || "active").toUpperCase();
-    freqText.textContent = data.resonance || "432.0Hz";
-    syncText.textContent = data.logic_state === "Synchronized" ? "COMPLETE" : "WAITING";
-    headerBackendState.textContent = data.status === "healthy" ? "Healthy" : "Offline";
-    headerBackendState.className = `v ${data.status === "healthy" ? "green" : "red"}`;
+    if (backendStatus) backendStatus.textContent = (data.status || "online").toUpperCase();
+    if (solverStatus) solverStatus.textContent = (data.logic_state || "active").toUpperCase();
+    if (freqText) freqText.textContent = data.resonance || "432.0Hz";
+    if (syncText) syncText.textContent = data.logic_state === "Synchronized" ? "COMPLETE" : "WAITING";
+    if (headerBackendState) headerBackendState.textContent = data.status === "healthy" ? "Healthy" : "Offline";
+    if (headerBackendState) headerBackendState.className = `v ${data.status === "healthy" ? "green" : "red"}`;
 
     if (data.status === "healthy") {
       applyModeVisuals();
-    } else {
+    } else if (statusText) {
       statusText.textContent = "OFFLINE";
       statusText.style.color = "#ef4444";
     }
@@ -458,14 +466,16 @@ RAM Rule: ${data.ram_rule || "[none]"}
 Seeded Volumes: ${data.seeded_volumes ?? "[unknown]"}`;
     }
   } catch (error) {
-    backendStatus.textContent = "OFFLINE";
-    solverStatus.textContent = "ERROR";
-    freqText.textContent = "DOWN";
-    syncText.textContent = "FAILED";
-    statusText.textContent = "OFFLINE";
-    statusText.style.color = "#ef4444";
-    headerBackendState.textContent = "Offline";
-    headerBackendState.className = "v red";
+    if (backendStatus) backendStatus.textContent = "OFFLINE";
+    if (solverStatus) solverStatus.textContent = "ERROR";
+    if (freqText) freqText.textContent = "DOWN";
+    if (syncText) syncText.textContent = "FAILED";
+    if (statusText) {
+      statusText.textContent = "OFFLINE";
+      statusText.style.color = "#ef4444";
+    }
+    if (headerBackendState) headerBackendState.textContent = "Offline";
+    if (headerBackendState) headerBackendState.className = "v red";
     logEntry(`Health check failed: ${error.message}`, "ERR");
     if (diagContent) diagContent.textContent = `Health failed: ${error.message}`;
   }
@@ -475,7 +485,7 @@ async function runPrimeProtocol() {
   logEntry("Resonance status requested...", "PRIME");
   try {
     const data = await apiGet("/resonance/status");
-    freqText.textContent = `${data.frequency}Hz`;
+    if (freqText) freqText.textContent = `${data.frequency}Hz`;
     logEntry(`RSP=${data.radiant_sovereign_presence}, coherence=${data.phase_coherence}, frequency=${data.frequency}`, "PRIME");
     if (diagContent) {
       diagContent.textContent = `Resonance
@@ -491,7 +501,7 @@ Frequency: ${data.frequency}`;
 async function runEngineStatus() {
   try {
     const data = await apiGet("/engine/status");
-    volumeCount.textContent = `${data.mapped_volumes} / 200`;
+    if (volumeCount) volumeCount.textContent = `${data.mapped_volumes} / 200`;
     reactToMappedVolumes(data.mapped_volumes || 0);
     reactToIntegrity(data.verification_events || 0);
 
@@ -518,7 +528,7 @@ RAM Rule: ${data.ram_rule || "[none]"}`;
 async function runIntegrityCheck() {
   try {
     const data = await apiGet("/engine/integrity");
-    volumeCount.textContent = `${data.mapped_volumes} / 200`;
+    if (volumeCount) volumeCount.textContent = `${data.mapped_volumes} / 200`;
     reactToMappedVolumes(data.mapped_volumes || 0);
     reactToIntegrity(data.verification_events || 0);
     logEntry(`${data.message} mapped=${data.mapped_volumes} events=${data.verification_events}`, "CHECK");
@@ -545,7 +555,7 @@ async function runProcessVolume(volumeId = 2) {
       source: "manual"
     });
 
-    volumeCount.textContent = `${Math.max(state.mappedVolumes, volumeId)} / 200`;
+    if (volumeCount) volumeCount.textContent = `${Math.max(state.mappedVolumes, volumeId)} / 200`;
     reactToMappedVolumes(Math.max(state.mappedVolumes, volumeId));
     spawnVolumeCluster(volumeId);
 
@@ -580,7 +590,7 @@ async function uploadAllVolumes() {
       });
 
       if (i % 10 === 0 || i === 200) {
-        volumeCount.textContent = `${i} / 200`;
+        if (volumeCount) volumeCount.textContent = `${i} / 200`;
         reactToMappedVolumes(i);
 
         if (archiveContent) {
@@ -624,10 +634,10 @@ async function runFullUpdate() {
     }
 
     if (data.ok) {
-      backendStatus.textContent = "HEALTHY";
-      solverStatus.textContent = "SYNCHRONIZED";
-      freqText.textContent = `${data.frequency}Hz`;
-      syncText.textContent = "COMPLETE";
+      if (backendStatus) backendStatus.textContent = "HEALTHY";
+      if (solverStatus) solverStatus.textContent = "SYNCHRONIZED";
+      if (freqText) freqText.textContent = `${data.frequency}Hz`;
+      if (syncText) syncText.textContent = "COMPLETE";
       reactToFullUpdate();
       reactToMappedVolumes(data.mapped_volumes || state.mappedVolumes || 1);
       applyModeVisuals();
@@ -691,7 +701,7 @@ function handleCommand(raw) {
   if (command === "process") return runProcessVolume(2);
 
   if (command === "clear") {
-    systemLog.innerHTML = "";
+    if (systemLog) systemLog.innerHTML = "";
     logEntry("Console cleared.", "SYS");
     return;
   }
@@ -799,7 +809,7 @@ async function runAiPrompt(raw) {
   if (q.includes("terminal") || q.includes("console")) {
     showApp("terminal");
     aiMessage("Opening the terminal.");
-    commandInput.focus();
+    commandInput?.focus();
     return;
   }
 
@@ -973,7 +983,9 @@ function runMasterFIC() {
       const target = document.querySelector(`#sec-${current} .v`);
       if (target) target.innerText = `${p}%`;
 
-      progressBar.style.width = `${(current / sectors.length) * 100 + (p / sectors.length)}%`;
+      if (progressBar) {
+        progressBar.style.width = `${(current / sectors.length) * 100 + (p / sectors.length)}%`;
+      }
 
       if (p >= 100) {
         clearInterval(sub);
@@ -1012,6 +1024,7 @@ function project3D(x, y, z) {
 }
 
 function drawBackground() {
+  if (!ctx) return;
   const bg = ctx.createRadialGradient(
     width * 0.5, height * 0.45, 20,
     width * 0.5, height * 0.5, Math.max(width, height) * 0.6
@@ -1025,6 +1038,7 @@ function drawBackground() {
 }
 
 function drawCore(time) {
+  if (!ctx) return;
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
 
@@ -1063,6 +1077,7 @@ function drawCore(time) {
 }
 
 function drawStars(time) {
+  if (!ctx) return;
   const projected = [];
 
   for (const star of state.stars) {
@@ -1093,6 +1108,7 @@ function drawStars(time) {
 }
 
 function drawParticles() {
+  if (!ctx) return;
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
 
@@ -1110,6 +1126,7 @@ function drawParticles() {
 }
 
 function drawNodeClusters() {
+  if (!ctx) return;
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
 
@@ -1141,6 +1158,7 @@ function drawNodeClusters() {
 }
 
 function drawPlanets() {
+  if (!ctx) return;
   const cx = width / 2 + state.camera.dragX * 0.15;
   const cy = height / 2 + state.camera.dragY * 0.15;
 
@@ -1164,6 +1182,7 @@ function drawPlanets() {
 }
 
 function drawReactionBursts() {
+  if (!ctx) return;
   for (let i = state.reactionBursts.length - 1; i >= 0; i -= 1) {
     const b = state.reactionBursts[i];
     b.x += b.vx;
@@ -1192,6 +1211,8 @@ function updateFps(now) {
 }
 
 function render(now) {
+  if (!ctx || !canvas) return;
+
   if (state.autoRotate) {
     state.camera.rotation += 0.0025 * state.rotationSpeedFactor;
   }
@@ -1314,17 +1335,17 @@ function pointerUp() {
   dragging = false;
 }
 
-canvas.addEventListener("mousedown", (e) => pointerDown(e.clientX, e.clientY));
+canvas?.addEventListener("mousedown", (e) => pointerDown(e.clientX, e.clientY));
 window.addEventListener("mousemove", (e) => pointerMove(e.clientX, e.clientY));
 window.addEventListener("mouseup", pointerUp);
 
-canvas.addEventListener("touchstart", (e) => {
+canvas?.addEventListener("touchstart", (e) => {
   const t = e.touches[0];
   if (!t) return;
   pointerDown(t.clientX, t.clientY);
 }, { passive: true });
 
-canvas.addEventListener("touchmove", (e) => {
+canvas?.addEventListener("touchmove", (e) => {
   const t = e.touches[0];
   if (!t) return;
   pointerMove(t.clientX, t.clientY);
@@ -1332,7 +1353,7 @@ canvas.addEventListener("touchmove", (e) => {
 
 window.addEventListener("touchend", pointerUp, { passive: true });
 
-canvas.addEventListener("wheel", (e) => {
+canvas?.addEventListener("wheel", (e) => {
   e.preventDefault();
   const delta = e.deltaY > 0 ? -0.08 : 0.08;
   state.camera.zoom = Math.max(0.55, Math.min(2.5, state.camera.zoom + delta));
@@ -1353,11 +1374,13 @@ homeCards.forEach((card) => {
       try {
         const listData = await fetchVolumeList();
         renderVolumeList(listData.volumes || []);
-        archiveContent.textContent = (listData.volumes || []).length
-          ? "Click a volume to load its full stored data."
-          : "No mapped volumes yet. Run process, seed, or upload all first.";
+        if (archiveContent) {
+          archiveContent.textContent = (listData.volumes || []).length
+            ? "Click a volume to load its full stored data."
+            : "No mapped volumes yet. Run process, seed, or upload all first.";
+        }
       } catch (error) {
-        archiveContent.textContent = `Failed to load archive list: ${error.message}`;
+        if (archiveContent) archiveContent.textContent = `Failed to load archive list: ${error.message}`;
       }
     }
 
@@ -1387,11 +1410,13 @@ navItems.forEach((button) => {
       try {
         const listData = await fetchVolumeList();
         renderVolumeList(listData.volumes || []);
-        archiveContent.textContent = (listData.volumes || []).length
-          ? "Click a volume to load its full stored data."
-          : "No mapped volumes yet. Run process, seed, or upload all first.";
+        if (archiveContent) {
+          archiveContent.textContent = (listData.volumes || []).length
+            ? "Click a volume to load its full stored data."
+            : "No mapped volumes yet. Run process, seed, or upload all first.";
+        }
       } catch (error) {
-        archiveContent.textContent = `Failed to load archive list: ${error.message}`;
+        if (archiveContent) archiveContent.textContent = `Failed to load archive list: ${error.message}`;
       }
     }
 
@@ -1406,7 +1431,7 @@ navItems.forEach((button) => {
   });
 });
 
-commandInput.addEventListener("keydown", (e) => {
+commandInput?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     const value = commandInput.value;
     logEntry(`> ${value}`, "CMD");
@@ -1420,16 +1445,16 @@ window.addEventListener("keydown", (e) => {
   if (e.key === "/") {
     e.preventDefault();
     showApp("terminal");
-    commandInput.focus();
+    commandInput?.focus();
   }
   if (e.key === "Escape") {
-    commandInput.blur();
+    commandInput?.blur();
   }
 });
 
 aiSendBtn?.addEventListener("click", async () => {
-  const value = aiInput.value;
-  aiInput.value = "";
+  const value = aiInput?.value || "";
+  if (aiInput) aiInput.value = "";
   await runAiPrompt(value);
 });
 
@@ -1448,21 +1473,27 @@ aiQuickButtons.forEach((btn) => {
 });
 
 aiClearBtn?.addEventListener("click", () => {
-  aiMessages.innerHTML = "";
+  if (aiMessages) aiMessages.innerHTML = "";
   aiMessage("AI console cleared.");
 });
 
 /* boot */
-setInterval(() => {
-  cycleCount += 1;
-  if (cycleDisplay) cycleDisplay.textContent = cycleCount.toLocaleString();
-}, 3000);
+try {
+  setInterval(() => {
+    cycleCount += 1;
+    if (cycleDisplay) cycleDisplay.textContent = cycleCount.toLocaleString();
+  }, 3000);
 
-resizeCanvas();
-initScene(600, 120);
-syncControlLabels();
-applyModeVisuals();
-runHealthCheck();
-runEngineStatus();
-logEntry("Frontend interface loaded. Canvas rendering active.", "SYS");
-requestAnimationFrame(render);
+  if (canvas && ctx) {
+    resizeCanvas();
+    initScene(600, 120);
+    syncControlLabels();
+    applyModeVisuals();
+    runHealthCheck();
+    runEngineStatus();
+    logEntry("Frontend interface loaded. Canvas rendering active.", "SYS");
+    requestAnimationFrame(render);
+  }
+} catch (error) {
+  console.error("Boot failed:", error);
+}
