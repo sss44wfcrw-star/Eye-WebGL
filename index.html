@@ -8,7 +8,6 @@
     :root{
       --bg:#020202;
       --panel:rgba(16,16,20,.56);
-      --panel-strong:rgba(0,0,0,.72);
       --text:#d4d4da;
       --muted:#6b7280;
       --white:#fff;
@@ -19,13 +18,11 @@
       --red:#ef4444;
       --line:rgba(255,255,255,.07);
       --shadow:0 0 36px rgba(245,158,11,.12);
-      --r1:16px;
       --r2:22px;
       --r3:28px;
       --term-green:#00ff41;
       --term-dim:#003b00;
       --accent-gold:#c5a059;
-      --math-blue:#0088ff;
     }
 
     *{box-sizing:border-box}
@@ -186,13 +183,6 @@
       align-items:start;
     }
 
-    /* HOME */
-    .home{
-      display:grid;
-      grid-template-columns:minmax(0,1.3fr) minmax(360px,.9fr);
-      gap:18px;
-    }
-
     .home-left,.home-right{
       display:flex;
       flex-direction:column;
@@ -260,7 +250,6 @@
       line-height:1.5;
     }
 
-    /* AI */
     .ai-shell{
       display:flex;
       flex-direction:column;
@@ -365,7 +354,6 @@
       padding:0 20px 18px;
     }
 
-    /* APP */
     .view-stack{
       display:grid;
       grid-template-columns:minmax(0,2.1fr) minmax(360px,1fr);
@@ -711,7 +699,7 @@
 
     .archive-browser-layout{
       display:grid;
-      grid-template-columns:220px 1fr;
+      grid-template-columns:260px 1fr;
       gap:14px;
       margin-top:12px;
       min-height:420px;
@@ -770,7 +758,6 @@
       min-height:280px;
     }
 
-    /* ARCHITECTURE */
     .architecture-shell{
       padding:20px;
       background:linear-gradient(180deg, #0a0a0a 0%, #050505 100%);
@@ -985,7 +972,7 @@
     }
 
     @media (max-width: 1100px){
-      .home,.view-stack,.main,.architecture-grid{grid-template-columns:1fr}
+      .main,.view-stack,.architecture-grid{grid-template-columns:1fr}
       .hero-panel,.sidebar{min-height:auto}
       .archive-browser-layout{grid-template-columns:1fr}
       .volume-list{max-height:180px}
@@ -1035,7 +1022,7 @@
 
     <div id="homeView" class="main">
       <div class="home-left">
-        <div class="panel hero">
+        <div class="panel">
           <div class="section-head">
             <div class="section-title">Home</div>
             <div class="section-sub">Primary access layer</div>
@@ -1095,7 +1082,7 @@
 Examples:
 - open the universe
 - show diagnostics
-- process volume 2
+- process volume 7
 - open archive
 - upload all 200 volumes
 - open architecture
