@@ -5,19 +5,31 @@ const BACKEND_URL = (() => {
   const { protocol, hostname } = window.location;
   if (protocol === "file:") return "http://localhost:8000";
   if (hostname === "localhost" || hostname === "127.0.0.1") return "http://localhost:8000";
-
   return "https://parakletos-backend-2.onrender.com";
 })();
 
 /* ===========================
    DOM
 =========================== */
+const homeView = document.getElementById("homeView");
+const appViews = document.getElementById("appViews");
+
+const headerRealityState = document.getElementById("headerRealityState");
+const headerBackendState = document.getElementById("headerBackendState");
+
+const aiMessages = document.getElementById("aiMessages");
+const aiInput = document.getElementById("aiInput");
+const aiSendBtn = document.getElementById("aiSendBtn");
+const aiClearBtn = document.getElementById("aiClearBtn");
+const aiQuickButtons = document.querySelectorAll(".ai-quick");
+const homeCards = document.querySelectorAll(".home-card");
+
 const canvas = document.getElementById("webgl-canvas");
 const ctx = canvas?.getContext("2d");
 
 const fpsCounter = document.getElementById("fps-counter");
 const systemLog = document.getElementById("system-log");
-const commandInput = document.querySelector(".input-line input");
+const commandInput = document.getElementById("commandInput");
 
 const statusText = document.getElementById("statusText");
 const backendStatus = document.getElementById("backendStatus");
@@ -29,6 +41,12 @@ const cycleDisplay = document.getElementById("cycle");
 
 const navItems = document.querySelectorAll(".nav-item");
 const gridOverlay = document.getElementById("gridOverlay");
+
+const archiveView = document.getElementById("archiveView");
+const diagnosticsView = document.getElementById("diagnosticsView");
+const terminalView = document.getElementById("terminalView");
+const archiveContent = document.getElementById("archiveContent");
+const diagContent = document.getElementById("diagContent");
 
 /* controls */
 const zoomSlider = document.getElementById("zoomSlider");
@@ -59,7 +77,6 @@ if (!canvas || !ctx || !fpsCounter || !systemLog || !commandInput) {
   throw new Error("Required DOM elements are missing.");
 }
 
-/* build grid overlay */
 if (gridOverlay && gridOverlay.children.length === 0) {
   for (let i = 0; i < 192; i += 1) {
     const cell = document.createElement("div");
@@ -76,6 +93,14 @@ function logEntry(message, kind = "INFO") {
   line.textContent = `[${kind}] ${message}`;
   systemLog.appendChild(line);
   systemLog.scrollTop = systemLog.scrollHeight;
+}
+
+function aiMessage(text, who = "ai") {
+  const div = document.createElement("div");
+  div.className = `msg ${who}`;
+  div.textContent = text;
+  aiMessages.appendChild(div);
+  aiMessages.scrollTop = aiMessages.scrollHeight;
 }
 
 /* ===========================
@@ -112,8 +137,6 @@ const state = {
     { name: "Earth", radius: 180, speed: 0.010, size: 3.5, color: "#0088ff", angle: Math.random() * Math.PI * 2 },
     { name: "Mars", radius: 245, speed: 0.008, size: 2.5, color: "#ff4400", angle: Math.random() * Math.PI * 2 }
   ],
-
-  /* reaction state */
   universePulse: 1,
   reactionBursts: [],
   mappedVolumes: 0,
@@ -121,6 +144,40 @@ const state = {
   resonanceBoost: 1,
   nodeClusters: []
 };
+
+/* ===========================
+   VIEW ROUTING
+=========================== */
+function showHome() {
+  homeView.classList.remove("hidden");
+  appViews.classList.add("hidden");
+}
+
+function showApp(view = "universe") {
+  homeView.classList.add("hidden");
+  appViews.classList.remove("hidden");
+
+  archiveView.classList.add("hidden");
+  diagnosticsView.classList.add("hidden");
+  terminalView.classList.add("hidden");
+
+  navItems.forEach((n) => n.classList.remove("active"));
+
+  if (view === "archive") {
+    archiveView.classList.remove("hidden");
+    document.querySelector('.nav-item[data-module="archive"]')?.classList.add("active");
+  } else if (view === "diagnostics") {
+    diagnosticsView.classList.remove("hidden");
+    terminalView.classList.remove("hidden");
+    document.querySelector('.nav-item[data-module="diagnostics"]')?.classList.add("active");
+  } else if (view === "terminal") {
+    terminalView.classList.remove("hidden");
+    document.querySelector('.nav-item[data-module="terminal"]')?.classList.add("active");
+  } else {
+    terminalView.classList.remove("hidden");
+    document.querySelector('.nav-item[data-module="universe"]')?.classList.add("active");
+  }
+}
 
 /* ===========================
    INIT / SCENE
@@ -241,23 +298,8 @@ function reactToFullUpdate() {
 
 function applyModeVisuals() {
   if (!statusText) return;
-
-  if (activeMode === "archive") {
-    statusText.textContent = "ARCHIVE";
-    statusText.style.color = "#f59e0b";
-  } else if (activeMode === "verifier") {
-    statusText.textContent = "VERIFY";
-    statusText.style.color = "#22c55e";
-  } else if (activeMode === "search") {
-    statusText.textContent = "SEARCH";
-    statusText.style.color = "#ffffff";
-  } else if (activeMode === "registry") {
-    statusText.textContent = "REGISTRY";
-    statusText.style.color = "#f59e0b";
-  } else {
-    statusText.textContent = "UNLOCKED";
-    statusText.style.color = "#22c55e";
-  }
+  statusText.textContent = "UNLOCKED";
+  statusText.style.color = "#22c55e";
 }
 
 /* ===========================
@@ -291,35 +333,43 @@ async function apiPost(path, body) {
 
 async function runHealthCheck() {
   logEntry("Initiating backend diagnostics...", "REQ");
-  if (backendStatus) backendStatus.textContent = "PINGING";
-  if (solverStatus) solverStatus.textContent = "CHECKING";
+  backendStatus.textContent = "PINGING";
+  solverStatus.textContent = "CHECKING";
+  headerBackendState.textContent = "Connecting";
 
   try {
     const data = await apiGet("/health");
 
-    if (backendStatus) backendStatus.textContent = data.status?.toUpperCase?.() || "ONLINE";
-    if (solverStatus) solverStatus.textContent = data.logic_state?.toUpperCase?.() || "ACTIVE";
-    if (freqText) freqText.textContent = data.resonance || "432.0Hz";
-    if (syncText) syncText.textContent = data.logic_state === "Synchronized" ? "COMPLETE" : "WAITING";
+    backendStatus.textContent = data.status?.toUpperCase?.() || "ONLINE";
+    solverStatus.textContent = data.logic_state?.toUpperCase?.() || "ACTIVE";
+    freqText.textContent = data.resonance || "432.0Hz";
+    syncText.textContent = data.logic_state === "Synchronized" ? "COMPLETE" : "WAITING";
+    headerBackendState.textContent = data.status === "healthy" ? "Healthy" : "Offline";
+    headerBackendState.className = `v ${data.status === "healthy" ? "green" : "red"}`;
 
-    if (data.status === "healthy" && activeMode === "sandbox") {
+    if (data.status === "healthy") {
       applyModeVisuals();
-    } else if (data.status !== "healthy" && statusText) {
+    } else {
       statusText.textContent = "OFFLINE";
       statusText.style.color = "#ef4444";
     }
 
     logEntry(`Health OK. status=${data.status} logic=${data.logic_state}`, "OK");
+    diagContent.textContent = `Health
+Status: ${data.status}
+Logic: ${data.logic_state}
+Resonance: ${data.resonance}`;
   } catch (error) {
-    if (backendStatus) backendStatus.textContent = "OFFLINE";
-    if (solverStatus) solverStatus.textContent = "ERROR";
-    if (freqText) freqText.textContent = "DOWN";
-    if (syncText) syncText.textContent = "FAILED";
-    if (statusText) {
-      statusText.textContent = "OFFLINE";
-      statusText.style.color = "#ef4444";
-    }
+    backendStatus.textContent = "OFFLINE";
+    solverStatus.textContent = "ERROR";
+    freqText.textContent = "DOWN";
+    syncText.textContent = "FAILED";
+    statusText.textContent = "OFFLINE";
+    statusText.style.color = "#ef4444";
+    headerBackendState.textContent = "Offline";
+    headerBackendState.className = "v red";
     logEntry(`Health check failed: ${error.message}`, "ERR");
+    diagContent.textContent = `Health failed: ${error.message}`;
   }
 }
 
@@ -327,11 +377,15 @@ async function runPrimeProtocol() {
   logEntry("Resonance status requested...", "PRIME");
   try {
     const data = await apiGet("/resonance/status");
-    if (freqText) freqText.textContent = `${data.frequency}Hz`;
+    freqText.textContent = `${data.frequency}Hz`;
     logEntry(
       `RSP=${data.radiant_sovereign_presence}, coherence=${data.phase_coherence}, frequency=${data.frequency}`,
       "PRIME"
     );
+    diagContent.textContent = `Resonance
+RSP: ${data.radiant_sovereign_presence}
+Coherence: ${data.phase_coherence}
+Frequency: ${data.frequency}`;
   } catch (error) {
     logEntry(`Resonance check failed: ${error.message}`, "ERR");
   }
@@ -340,13 +394,25 @@ async function runPrimeProtocol() {
 async function runEngineStatus() {
   try {
     const data = await apiGet("/engine/status");
-    if (volumeCount) volumeCount.textContent = `${data.mapped_volumes} / 200`;
+    volumeCount.textContent = `${data.mapped_volumes} / 200`;
     reactToMappedVolumes(data.mapped_volumes || 0);
     reactToIntegrity(data.verification_events || 0);
+
     logEntry(
       `Engine active=${data.active} mapped_volumes=${data.mapped_volumes} uptime=${data.uptime_seconds}s`,
       "ENGINE"
     );
+
+    diagContent.textContent = `Engine
+Active: ${data.active}
+Mapped Volumes: ${data.mapped_volumes}
+Verification Events: ${data.verification_events}
+Uptime: ${data.uptime_seconds}s`;
+
+    archiveContent.textContent = `Archive State
+Mapped volumes: ${data.mapped_volumes}
+Verification events: ${data.verification_events}
+Origin: ${data.origin}`;
   } catch (error) {
     logEntry(`Engine status failed: ${error.message}`, "ERR");
   }
@@ -355,10 +421,14 @@ async function runEngineStatus() {
 async function runIntegrityCheck() {
   try {
     const data = await apiGet("/engine/integrity");
-    if (volumeCount) volumeCount.textContent = `${data.mapped_volumes} / 200`;
+    volumeCount.textContent = `${data.mapped_volumes} / 200`;
     reactToMappedVolumes(data.mapped_volumes || 0);
     reactToIntegrity(data.verification_events || 0);
     logEntry(`${data.message} mapped=${data.mapped_volumes} events=${data.verification_events}`, "CHECK");
+    diagContent.textContent = `Integrity
+${data.message}
+Mapped: ${data.mapped_volumes}
+Events: ${data.verification_events}`;
   } catch (error) {
     logEntry(`Integrity check failed: ${error.message}`, "ERR");
   }
@@ -373,7 +443,7 @@ async function runProcessVolume() {
       text: "The manifold operates on a deterministic geometric scale where resonance is a function of logical consistency and prime frequency alignment."
     });
 
-    if (volumeCount) volumeCount.textContent = `${data.projection.volume} / 200`;
+    volumeCount.textContent = `${data.projection.volume} / 200`;
     reactToMappedVolumes(Math.max(state.mappedVolumes, data.projection.volume || 1));
     spawnVolumeCluster(data.projection.volume || 1);
     spawnReactionBurst(width / 2, height / 2, 24, "34,211,238");
@@ -382,6 +452,14 @@ async function runProcessVolume() {
       `Volume ${data.volume_id} mapped. resonance=${data.projection.resonance.toFixed(3)} vector=${data.projection.presence_vector.join(",")}`,
       "ARCHIVE"
     );
+
+    archiveContent.textContent =
+`Processed Volume
+ID: ${data.volume_id}
+Title: ${data.title}
+Resonance: ${data.projection.resonance.toFixed(3)}
+Vector: ${data.projection.presence_vector.join(",")}
+Checksum: ${data.projection.checksum}`;
   } catch (error) {
     logEntry(`Process failed: ${error.message}`, "ERR");
   }
@@ -401,16 +479,20 @@ async function runFullUpdate() {
     }
 
     if (data.ok) {
-      if (backendStatus) backendStatus.textContent = "HEALTHY";
-      if (solverStatus) solverStatus.textContent = "SYNCHRONIZED";
-      if (freqText) freqText.textContent = `${data.frequency}Hz`;
-      if (syncText) syncText.textContent = "COMPLETE";
-      activeMode = "sandbox";
-      navItems.forEach((n) => n.classList.remove("active"));
-      document.querySelector('.nav-item[data-module="sandbox"]')?.classList.add("active");
+      backendStatus.textContent = "HEALTHY";
+      solverStatus.textContent = "SYNCHRONIZED";
+      freqText.textContent = `${data.frequency}Hz`;
+      syncText.textContent = "COMPLETE";
       reactToFullUpdate();
       reactToMappedVolumes(data.mapped_volumes || state.mappedVolumes || 1);
       applyModeVisuals();
+
+      diagContent.textContent =
+`Full Update
+OK: ${data.ok}
+Frequency: ${data.frequency}
+Logs:
+${(data.logs || []).join("\n")}`;
     }
   } catch (error) {
     logEntry(`Full update failed: ${error.message}`, "ERR");
@@ -460,18 +542,15 @@ function handleCommand(raw) {
     state.universePulse = 1;
     state.resonanceBoost = 1;
 
-    if (zoomSlider) zoomSlider.value = "1.00";
-    if (rotationSpeedSlider) rotationSpeedSlider.value = "1.00";
-    if (starCountSlider) starCountSlider.value = "1400";
-    if (particleCountSlider) particleCountSlider.value = "260";
-    if (glowSlider) glowSlider.value = "1.00";
-    if (orbitStretchSlider) orbitStretchSlider.value = "0.36";
+    zoomSlider.value = "1.00";
+    rotationSpeedSlider.value = "1.00";
+    starCountSlider.value = "1400";
+    particleCountSlider.value = "260";
+    glowSlider.value = "1.00";
+    orbitStretchSlider.value = "0.36";
 
     initScene(1400, 260);
     syncControlLabels();
-    activeMode = "sandbox";
-    navItems.forEach((n) => n.classList.remove("active"));
-    document.querySelector('.nav-item[data-module="sandbox"]')?.classList.add("active");
     applyModeVisuals();
     logEntry("Universe reset.", "SYS");
     return;
@@ -489,6 +568,89 @@ function handleCommand(raw) {
   }
 
   logEntry(`Unknown command: ${raw}`, "WARN");
+}
+
+/* ===========================
+   AI ROUTER
+=========================== */
+async function runAiPrompt(raw) {
+  const text = raw.trim();
+  if (!text) return;
+
+  aiMessage(text, "user");
+  const q = text.toLowerCase();
+
+  if (q.includes("home")) {
+    showHome();
+    aiMessage("Opening the home interface.");
+    return;
+  }
+
+  if (q.includes("universe") || q.includes("space") || q.includes("visual")) {
+    showApp("universe");
+    aiMessage("Opening the universe view.");
+    return;
+  }
+
+  if (q.includes("archive")) {
+    showApp("archive");
+    aiMessage("Opening the archive view.");
+    return;
+  }
+
+  if (q.includes("diagnostic") || q.includes("health") || q.includes("status")) {
+    showApp("diagnostics");
+    aiMessage("Running diagnostics now.");
+    await runHealthCheck();
+    await runEngineStatus();
+    return;
+  }
+
+  if (q.includes("terminal") || q.includes("console")) {
+    showApp("terminal");
+    aiMessage("Opening the terminal.");
+    commandInput.focus();
+    return;
+  }
+
+  if (q.includes("integrity")) {
+    showApp("diagnostics");
+    aiMessage("Running integrity check.");
+    await runIntegrityCheck();
+    return;
+  }
+
+  if (q.includes("engine")) {
+    showApp("diagnostics");
+    aiMessage("Checking engine status.");
+    await runEngineStatus();
+    return;
+  }
+
+  if (q.includes("process") || q.includes("volume 2") || q.includes("map volume")) {
+    showApp("archive");
+    aiMessage("Processing Volume 2.");
+    await runProcessVolume();
+    return;
+  }
+
+  if (q.includes("full update") || q.includes("sync everything") || q.includes("synchronize all")) {
+    showApp("diagnostics");
+    aiMessage("Running full update.");
+    await runFullUpdate();
+    return;
+  }
+
+  if (q.includes("resonance") || q.includes("prime")) {
+    showApp("diagnostics");
+    aiMessage("Checking resonance status.");
+    await runPrimeProtocol();
+    return;
+  }
+
+  aiMessage(
+    "I can route you to: universe, archive, diagnostics, terminal, process volume 2, resonance, engine, integrity, or full update."
+  );
 }
 
 /* ===========================
@@ -527,37 +689,14 @@ function drawCore(time) {
   ctx.lineWidth = 1.2;
 
   ctx.beginPath();
-  ctx.ellipse(
-    cx,
-    cy,
-    180 * state.camera.zoom * state.universePulse,
-    70 * state.camera.zoom * state.universePulse,
-    state.camera.rotation,
-    0,
-    Math.PI * 2
-  );
+  ctx.ellipse(cx, cy, 180 * state.camera.zoom * state.universePulse, 70 * state.camera.zoom * state.universePulse, state.camera.rotation, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.ellipse(
-    cx,
-    cy,
-    260 * state.camera.zoom * state.universePulse,
-    110 * state.camera.zoom * state.universePulse,
-    state.camera.rotation,
-    0,
-    Math.PI * 2
-  );
+  ctx.ellipse(cx, cy, 260 * state.camera.zoom * state.universePulse, 110 * state.camera.zoom * state.universePulse, state.camera.rotation, 0, Math.PI * 2);
   ctx.stroke();
 
-  const core = ctx.createRadialGradient(
-    cx,
-    cy,
-    2,
-    cx,
-    cy,
-    46 * state.camera.zoom * state.glowStrength
-  );
+  const core = ctx.createRadialGradient(cx, cy, 2, cx, cy, 46 * state.camera.zoom * state.glowStrength);
   core.addColorStop(0, "rgba(255,255,255,0.98)");
   core.addColorStop(0.2, "rgba(255,220,160,0.86)");
   core.addColorStop(0.55, "rgba(0,255,204,0.18)");
@@ -580,7 +719,6 @@ function project3D(x, y, z) {
 
   const y2 = dy;
   let z2 = z1;
-
   if (z2 <= 1) z2 = 1;
 
   const fov = 920 * state.camera.zoom;
@@ -794,26 +932,26 @@ centerViewBtn?.addEventListener("click", () => {
 
 zoomInBtn?.addEventListener("click", () => {
   state.camera.zoom = Math.min(2.5, state.camera.zoom + 0.1);
-  if (zoomSlider) zoomSlider.value = state.camera.zoom.toFixed(2);
+  zoomSlider.value = state.camera.zoom.toFixed(2);
   syncControlLabels();
 });
 
 zoomOutBtn?.addEventListener("click", () => {
   state.camera.zoom = Math.max(0.55, state.camera.zoom - 0.1);
-  if (zoomSlider) zoomSlider.value = state.camera.zoom.toFixed(2);
+  zoomSlider.value = state.camera.zoom.toFixed(2);
   syncControlLabels();
 });
 
 boostStarsBtn?.addEventListener("click", () => {
   const next = Math.min(4000, state.stars.length + 300);
-  if (starCountSlider) starCountSlider.value = String(next);
+  starCountSlider.value = String(next);
   initScene(next, state.particles.length || 260);
   syncControlLabels();
 });
 
 boostParticlesBtn?.addEventListener("click", () => {
   const next = Math.min(1200, state.particles.length + 80);
-  if (particleCountSlider) particleCountSlider.value = String(next);
+  particleCountSlider.value = String(next);
   initScene(state.stars.length || 1400, next);
   syncControlLabels();
 });
@@ -869,7 +1007,7 @@ canvas.addEventListener("wheel", (e) => {
   e.preventDefault();
   const delta = e.deltaY > 0 ? -0.08 : 0.08;
   state.camera.zoom = Math.max(0.55, Math.min(2.5, state.camera.zoom + delta));
-  if (zoomSlider) zoomSlider.value = state.camera.zoom.toFixed(2);
+  zoomSlider.value = state.camera.zoom.toFixed(2);
   syncControlLabels();
 }, { passive: false });
 
@@ -878,18 +1016,30 @@ canvas.addEventListener("wheel", (e) => {
 =========================== */
 window.addEventListener("resize", resizeCanvas);
 
+homeCards.forEach((card) => {
+  card.addEventListener("click", () => {
+    const view = card.dataset.openView;
+    showApp(view);
+    aiMessage(`Opened ${view}.`);
+  });
+});
+
 navItems.forEach((button) => {
   button.addEventListener("click", async () => {
-    navItems.forEach((b) => b.classList.remove("active"));
-    button.classList.add("active");
-    activeMode = button.dataset.module;
-    applyModeVisuals();
-    logEntry(`Module focus shifted to ${button.dataset.module}.`, "MODULE");
+    const module = button.dataset.module;
 
-    if (activeMode === "archive") await runProcessVolume();
-    if (activeMode === "verifier") await runIntegrityCheck();
-    if (activeMode === "search") await runPrimeProtocol();
-    if (activeMode === "registry") await runEngineStatus();
+    if (module === "home") {
+      showHome();
+      return;
+    }
+
+    showApp(module);
+
+    if (module === "archive") await runProcessVolume();
+    if (module === "diagnostics") {
+      await runHealthCheck();
+      await runEngineStatus();
+    }
   });
 });
 
@@ -906,11 +1056,37 @@ window.addEventListener("keydown", (e) => {
   if (document.activeElement === commandInput && e.key !== "Escape") return;
   if (e.key === "/") {
     e.preventDefault();
+    showApp("terminal");
     commandInput.focus();
   }
   if (e.key === "Escape") {
     commandInput.blur();
   }
+});
+
+aiSendBtn.addEventListener("click", async () => {
+  const value = aiInput.value;
+  aiInput.value = "";
+  await runAiPrompt(value);
+});
+
+aiInput.addEventListener("keydown", async (e) => {
+  if (e.key === "Enter") {
+    const value = aiInput.value;
+    aiInput.value = "";
+    await runAiPrompt(value);
+  }
+});
+
+aiQuickButtons.forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    await runAiPrompt(btn.dataset.ai);
+  });
+});
+
+aiClearBtn.addEventListener("click", () => {
+  aiMessages.innerHTML = "";
+  aiMessage("AI console cleared.");
 });
 
 /* ===========================
@@ -924,7 +1100,6 @@ setInterval(() => {
 resizeCanvas();
 initScene();
 syncControlLabels();
-document.querySelector('.nav-item[data-module="sandbox"]')?.classList.add("active");
 applyModeVisuals();
 runHealthCheck();
 runEngineStatus();
