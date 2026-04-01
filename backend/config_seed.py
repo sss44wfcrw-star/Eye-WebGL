@@ -27,8 +27,24 @@ SYSTEM_CONFIG = {
     "ram_rule": "<= 20%"
 }
 
-
 NATIVE_LAYERS = {
+    "kernel": {
+        "type": "bootloader",
+        "status": "initialized"
+    },
+    "governor": {
+        "type": "python_core",
+        "status": "active"
+    },
+    "sentry": {
+        "type": "memory_guard",
+        "limit": "20%"
+    },
+    "network": {
+        "type": "isolated",
+        "port": 432
+    },  # ✅ THIS COMMA FIXES EVERYTHING
+
     "bootloader.asm": {
         "title": "Boot Loader",
         "type": "assembly",
