@@ -291,67 +291,6 @@
       flex-direction:column;
       gap:18px;
       min-height:760px;
-      <div class="panel autonomy" id="controlPanel">
-  <h3>Universe Controls</h3>
-
-  <div class="status-card">
-    <div class="left">Camera Zoom</div>
-    <div class="right"><span id="zoomValue">1.00</span>x</div>
-  </div>
-  <input id="zoomSlider" type="range" min="0.55" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Rotation Speed</div>
-    <div class="right"><span id="rotationSpeedValue">1.00</span></div>
-  </div>
-  <input id="rotationSpeedSlider" type="range" min="0" max="3" step="0.01" value="1.00" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Star Density</div>
-    <div class="right"><span id="starCountValue">1400</span></div>
-  </div>
-  <input id="starCountSlider" type="range" min="200" max="4000" step="50" value="1400" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Particle Density</div>
-    <div class="right"><span id="particleCountValue">260</span></div>
-  </div>
-  <input id="particleCountSlider" type="range" min="50" max="1200" step="10" value="260" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Glow Strength</div>
-    <div class="right"><span id="glowValue">1.00</span></div>
-  </div>
-  <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Orbit Stretch</div>
-    <div class="right"><span id="orbitStretchValue">0.36</span></div>
-  </div>
-  <input id="orbitStretchSlider" type="range" min="0.15" max="0.75" step="0.01" value="0.36" class="ctl-slider" />
-
-  <div class="status-card">
-    <div class="left">Label Visibility</div>
-    <div class="right"><span id="labelsValue">ON</span></div>
-  </div>
-  <div class="ctl-button-row">
-    <button id="toggleLabelsBtn" class="ctl-btn">Toggle Labels</button>
-    <button id="toggleAutoRotateBtn" class="ctl-btn">Auto Rotate</button>
-  </div>
-
-  <div class="status-card">
-    <div class="left">Quick Actions</div>
-    <div class="right">LIVE</div>
-  </div>
-  <div class="ctl-button-grid">
-    <button id="centerViewBtn" class="ctl-btn">Center View</button>
-    <button id="zoomInBtn" class="ctl-btn">Zoom In</button>
-    <button id="zoomOutBtn" class="ctl-btn">Zoom Out</button>
-    <button id="boostStarsBtn" class="ctl-btn">Boost Stars</button>
-    <button id="boostParticlesBtn" class="ctl-btn">Boost Particles</button>
-    <button id="resetUniverseBtn" class="ctl-btn">Reset Universe</button>
-  </div>
-</div>
     }
 
     .autonomy{
@@ -427,6 +366,79 @@
       color:var(--amber);
       border-color:rgba(245,158,11,.34);
       box-shadow:var(--shadow);
+    }
+
+    .ctl-slider{
+      width:100%;
+      margin:10px 0 16px;
+      appearance:none;
+      background:transparent;
+    }
+
+    .ctl-slider::-webkit-slider-runnable-track{
+      height:8px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+    }
+
+    .ctl-slider::-webkit-slider-thumb{
+      appearance:none;
+      width:20px;
+      height:20px;
+      border-radius:50%;
+      background:var(--amber);
+      border:none;
+      margin-top:-6px;
+      box-shadow:0 0 12px rgba(245,158,11,.35);
+    }
+
+    .ctl-slider::-moz-range-track{
+      height:8px;
+      background:rgba(255,255,255,.08);
+      border-radius:999px;
+    }
+
+    .ctl-slider::-moz-range-thumb{
+      width:20px;
+      height:20px;
+      border:none;
+      border-radius:50%;
+      background:var(--amber);
+      box-shadow:0 0 12px rgba(245,158,11,.35);
+    }
+
+    .ctl-button-row,
+    .ctl-button-grid{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .ctl-button-row{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .ctl-button-grid{
+      grid-template-columns:1fr 1fr;
+    }
+
+    .ctl-btn{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(0,0,0,.42);
+      color:#fff;
+      cursor:pointer;
+      font-size:11px;
+      font-weight:900;
+      text-transform:uppercase;
+      letter-spacing:.16em;
+    }
+
+    .ctl-btn:hover{
+      border-color:rgba(245,158,11,.34);
+      color:var(--amber);
     }
 
     .terminal{
@@ -678,6 +690,70 @@
           </div>
         </div>
 
+        <div class="panel autonomy" id="controlPanel">
+          <h3>Universe Controls</h3>
+
+          <div class="status-card">
+            <div class="left">Camera Zoom</div>
+            <div class="right"><span id="zoomValue">1.00</span>x</div>
+          </div>
+          <input id="zoomSlider" type="range" min="0.55" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
+
+          <div class="status-card">
+            <div class="left">Rotation Speed</div>
+            <div class="right"><span id="rotationSpeedValue">1.00</span></div>
+          </div>
+          <input id="rotationSpeedSlider" type="range" min="0" max="3" step="0.01" value="1.00" class="ctl-slider" />
+
+          <div class="status-card">
+            <div class="left">Star Density</div>
+            <div class="right"><span id="starCountValue">1400</span></div>
+          </div>
+          <input id="starCountSlider" type="range" min="200" max="4000" step="50" value="1400" class="ctl-slider" />
+
+          <div class="status-card">
+            <div class="left">Particle Density</div>
+            <div class="right"><span id="particleCountValue">260</span></div>
+          </div>
+          <input id="particleCountSlider" type="range" min="50" max="1200" step="10" value="260" class="ctl-slider" />
+
+          <div class="status-card">
+            <div class="left">Glow Strength</div>
+            <div class="right"><span id="glowValue">1.00</span></div>
+          </div>
+          <input id="glowSlider" type="range" min="0.2" max="2.5" step="0.01" value="1.00" class="ctl-slider" />
+
+          <div class="status-card">
+            <div class="left">Orbit Stretch</div>
+            <div class="right"><span id="orbitStretchValue">0.36</span></div>
+          </div>
+          <input id="orbitStretchSlider" type="range" min="0.15" max="0.75" step="0.01" value="0.36" class="ctl-slider" />
+
+          <div class="status-card">
+            <div class="left">Label Visibility</div>
+            <div class="right"><span id="labelsValue">ON</span></div>
+          </div>
+
+          <div class="ctl-button-row">
+            <button id="toggleLabelsBtn" class="ctl-btn">Toggle Labels</button>
+            <button id="toggleAutoRotateBtn" class="ctl-btn">Auto Rotate</button>
+          </div>
+
+          <div class="status-card">
+            <div class="left">Quick Actions</div>
+            <div class="right">LIVE</div>
+          </div>
+
+          <div class="ctl-button-grid">
+            <button id="centerViewBtn" class="ctl-btn">Center View</button>
+            <button id="zoomInBtn" class="ctl-btn">Zoom In</button>
+            <button id="zoomOutBtn" class="ctl-btn">Zoom Out</button>
+            <button id="boostStarsBtn" class="ctl-btn">Boost Stars</button>
+            <button id="boostParticlesBtn" class="ctl-btn">Boost Particles</button>
+            <button id="resetUniverseBtn" class="ctl-btn">Reset Universe</button>
+          </div>
+        </div>
+
         <div class="terminal">
           <div class="term-head">
             <div class="title">Autonomous Feed</div>
@@ -717,4 +793,4 @@
 
   <script src="main.js"></script>
 </body>
-</html>
+</html>  now what went wrong 
